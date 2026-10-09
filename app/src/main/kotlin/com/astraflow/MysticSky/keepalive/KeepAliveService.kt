@@ -22,7 +22,13 @@ class KeepAliveService : Service() {
     private val lyricBeat = object : Runnable {
         override fun run() {
             runCatching {
-                val enabled = ModulePrefs.isStandaloneLyric(ModulePrefs.of(this@KeepAliveService))
+                val prefs = ModulePrefs.of(this@KeepAliveService)
+                if (!ModulePrefs.isEnabled(prefs)) {
+                    stopSelf()
+                    return
+                }
+                val enabled = ModulePrefs.isLyricEnabled(prefs) &&
+                    ModulePrefs.isStandaloneLyric(prefs)
                 StandaloneLyric.tick(this@KeepAliveService, enabled)
             }
             handler.postDelayed(this, if (StandaloneLyric.lastActive()) LYRIC_BEAT_MS else LYRIC_IDLE_MS)
@@ -31,8 +37,13 @@ class KeepAliveService : Service() {
 
     private val beat = object : Runnable {
         override fun run() {
-
-            runCatching { LinkHub.warmUp(this@KeepAliveService) }
+            runCatching {
+                if (!ModulePrefs.isEnabled(ModulePrefs.of(this@KeepAliveService))) {
+                    stopSelf()
+                    return
+                }
+                LinkHub.warmUp(this@KeepAliveService)
+            }
             handler.postDelayed(this, BEAT_MS)
         }
     }

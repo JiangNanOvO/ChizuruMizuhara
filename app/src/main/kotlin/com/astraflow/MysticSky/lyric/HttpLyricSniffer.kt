@@ -21,6 +21,7 @@ internal class HttpLyricSniffer(
     private val module: XposedModule,
     private val logger: ModuleLogger,
     private val classLoader: ClassLoader,
+    private val isActive: () -> Boolean = { true },
     private val onLyric: (LocalLyric, String) -> Unit
 ) {
 
@@ -86,6 +87,7 @@ internal class HttpLyricSniffer(
             module.hook(newCall)
                 .setExceptionMode(XposedInterface.ExceptionMode.PROTECTIVE)
                 .intercept { chain ->
+                    if (!isActive()) return@intercept chain.proceed()
                     runCatching {
                         val url = urlMethod.invoke(chain.args.getOrNull(0))?.toString().orEmpty()
                         if (url.isNotEmpty() && looksLikeLyricUrl(url)) {
@@ -118,6 +120,7 @@ internal class HttpLyricSniffer(
             module.hook(bodyMethod)
                 .setExceptionMode(XposedInterface.ExceptionMode.PROTECTIVE)
                 .intercept { chain ->
+                    if (!isActive()) return@intercept chain.proceed()
                     val result = chain.proceed()
                     runCatching {
                         val response = chain.thisObject
@@ -172,6 +175,7 @@ internal class HttpLyricSniffer(
             module.hook(method)
                 .setExceptionMode(XposedInterface.ExceptionMode.PROTECTIVE)
                 .intercept { chain ->
+                    if (!isActive()) return@intercept chain.proceed()
                     val stream = chain.proceed() as? java.io.InputStream
                     if (stream == null) stream else KuwoStreamTee(stream) { dispatch(it) }
                 }
@@ -191,6 +195,7 @@ internal class HttpLyricSniffer(
             module.hook(method)
                 .setExceptionMode(XposedInterface.ExceptionMode.PROTECTIVE)
                 .intercept { chain ->
+                    if (!isActive()) return@intercept chain.proceed()
                     val result = chain.proceed()
                     runCatching {
                         if (bodyUrls[chain.thisObject] != null) {

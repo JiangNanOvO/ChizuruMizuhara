@@ -59,16 +59,20 @@ class HookEntry : XposedModule() {
         if (packageName == Module.PACKAGE_NAME) return
         if (isSystemFramework(packageName)) return
 
-        if (!lyricInstalled.compareAndSet(false, true)) return
-        if (!isEnabled()) {
-            logger.info("Module disabled in settings, skip $packageName")
+        if (!isEnabled() || !isLyricEnabled()) {
+            logger.info("Module or lyric disabled in settings, skip $packageName")
             return
         }
+        if (!lyricInstalled.compareAndSet(false, true)) return
 
         logger.info("Package ready: $packageName, process=" + currentProcessName())
 
         if (packageName == NeriPlayerHook.PACKAGE) {
-            NeriPlayerHook.install(this, param.classLoader, logger)
+            if (isNeriAdapt()) {
+                NeriPlayerHook.install(this, param.classLoader, logger)
+            } else {
+                logger.info("音理音理适配未开启，跳过安装")
+            }
             return
         }
 
@@ -91,10 +95,15 @@ class HookEntry : XposedModule() {
         }
     }
 
-    private fun isEnabled(): Boolean = runCatching {
-        getRemotePreferences(ModulePrefs.NAME)
-            .getBoolean(ModulePrefs.KEY_ENABLED, true)
-    }.getOrDefault(true)
+    private fun isEnabled(): Boolean = remoteBool(ModulePrefs.KEY_ENABLED, true)
+
+    private fun isLyricEnabled(): Boolean = remoteBool(ModulePrefs.KEY_LYRIC, true)
+
+    private fun isNeriAdapt(): Boolean = remoteBool(ModulePrefs.KEY_NERI_ADAPT, false)
+
+    private fun remoteBool(key: String, def: Boolean): Boolean = runCatching {
+        getRemotePreferences(ModulePrefs.NAME).getBoolean(key, def)
+    }.getOrDefault(def)
 
     private fun isSystemFramework(packageName: String): Boolean =
         packageName == "android" || packageName == "system" || packageName == "system_server"

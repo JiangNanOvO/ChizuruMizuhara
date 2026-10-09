@@ -113,6 +113,10 @@
     <string name="lyric_standalone_sub">水原千鹤自己当提供者，播放器被杀也不断词</string>
     <string name="lyric_standalone_on">已开启：正在用 root 读播放状态与歌词缓存</string>
     <string name="lyric_standalone_off">已关闭独立提供者</string>
+    <string name="neri_adapt">音理音理适配（root）</string>
+    <string name="neri_adapt_sub">开启后用 root 自动打开音理音理的外部歌词输出</string>
+    <string name="neri_adapt_on">已开启音理音理适配</string>
+    <string name="neri_adapt_off">已关闭音理音理适配</string>
 
     <string name="home_sponsor">公益赞助</string>
     <string name="sponsor_title">公益赞助</string>
