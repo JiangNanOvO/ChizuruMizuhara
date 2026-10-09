@@ -1,0 +1,115 @@
+package com.astraflow.MysticSky.xposed
+
+import android.util.Log
+import io.github.libxposed.api.XposedModule
+import io.github.libxposed.api.XposedModuleInterface.ModuleLoadedParam
+import io.github.libxposed.api.XposedModuleInterface.PackageReadyParam
+import io.github.libxposed.api.XposedModuleInterface.SystemServerStartingParam
+import com.astraflow.MysticSky.Module
+import com.astraflow.MysticSky.capability.link.LinkHook
+import com.astraflow.MysticSky.capability.neriplayer.NeriPlayerHook
+import com.astraflow.MysticSky.lyric.Constants
+import com.astraflow.MysticSky.lyric.HookCrashLog
+import com.astraflow.MysticSky.lyric.LocalLyricProvider
+import com.astraflow.MysticSky.lyric.ModuleLogger
+import com.astraflow.MysticSky.lyric.MitianLyricProvider
+import com.astraflow.MysticSky.settings.ModulePrefs
+import android.os.Handler
+import android.os.Looper
+import java.util.concurrent.atomic.AtomicBoolean
+
+class HookEntry : XposedModule() {
+
+    private val logger = ModuleLogger(this)
+
+    private val lyricInstalled = lyricInstalledGate
+
+    private val linkInstalled = linkInstalledGate
+
+    @Volatile
+    private var isSystemServer = false
+
+    override fun onModuleLoaded(param: ModuleLoadedParam) {
+        isSystemServer = param.isSystemServer
+        if (isSystemServer) {
+            logSys("Mitian loaded in system_server")
+            return
+        }
+        if (!loadedLoggedGate.compareAndSet(false, true)) return
+        logger.info(
+            "Mitian loaded: process=" + param.processName +
+                ", framework=" + frameworkName + " " + frameworkVersion +
+                " (" + frameworkVersionCode + "), api=" + apiVersion
+        )
+    }
+
+    override fun onSystemServerStarting(param: SystemServerStartingParam) {
+        if (!linkInstalled.compareAndSet(false, true)) {
+            logSys("链接助手已装过，跳过")
+            return
+        }
+        runCatching {
+            LinkHook(module = this, classLoader = param.classLoader).install()
+        }.onFailure { logSys("链接助手挂载失败: ${it.message}") }
+    }
+
+    override fun onPackageReady(param: PackageReadyParam) {
+        val packageName = param.packageName
+        if (!param.isFirstPackage) return
+        if (packageName == Module.PACKAGE_NAME) return
+        if (isSystemFramework(packageName)) return
+
+        if (!lyricInstalled.compareAndSet(false, true)) return
+        if (!isEnabled()) {
+            logger.info("Module disabled in settings, skip $packageName")
+            return
+        }
+
+        logger.info("Package ready: $packageName, process=" + currentProcessName())
+
+        if (packageName == NeriPlayerHook.PACKAGE) {
+            NeriPlayerHook.install(this, param.classLoader, logger)
+            return
+        }
+
+        try {
+            if (packageName == Constants.PLAYER_PACKAGE_NAME) {
+                MitianLyricProvider(this, logger, param.classLoader).installHooks()
+                return
+            }
+            LocalLyricProvider(
+                module = this,
+                logger = logger,
+                classLoader = param.classLoader,
+                hostPackage = packageName,
+                processName = currentProcessName(),
+                recipe = Constants.recipeOf(packageName)
+            ).installHooks()
+        } catch (throwable: Throwable) {
+            logger.error("Failed to install hooks for $packageName", throwable)
+            HookCrashLog.record("installHooks:$packageName", throwable)
+        }
+    }
+
+    private fun isEnabled(): Boolean = runCatching {
+        getRemotePreferences(ModulePrefs.NAME)
+            .getBoolean(ModulePrefs.KEY_ENABLED, true)
+    }.getOrDefault(true)
+
+    private fun isSystemFramework(packageName: String): Boolean =
+        packageName == "android" || packageName == "system" || packageName == "system_server"
+
+    private fun currentProcessName(): String = runCatching {
+        java.io.File("/proc/self/cmdline").readText().trimEnd('\u0000')
+    }.getOrDefault("")
+
+    private fun logSys(msg: String) {
+        runCatching { log(Log.INFO, "Mitian", msg) }
+    }
+
+    private companion object {
+        val loadedLoggedGate = AtomicBoolean(false)
+        val lyricInstalledGate = AtomicBoolean(false)
+        val linkInstalledGate = AtomicBoolean(false)
+    }
+}

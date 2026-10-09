@@ -1,0 +1,29 @@
+MIT License
+
+Copyright (c) 2026 谜天 Mitian
+Copyright (c) 2026 2979208016 (星河 AstraGalaxy，歌词部分)
+
+本工程在 MIT 许可下发布，并包含以下来源的代码：
+
+  * 歌词胶囊相关实现（lyric/ 目录、歌词相关的 UI 与偏好）
+      移植自星河 AstraGalaxy，Copyright (c) 2026 2979208016，MIT License。
+  * 链接助手本次按星河岛公开接口重写（capability/link/ 目录），
+      接口定义与接入库来自星流 AstraFlow（接入库另有非商业许可，见 NOTICE.md）。
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

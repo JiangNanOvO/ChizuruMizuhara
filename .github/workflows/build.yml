@@ -1,0 +1,59 @@
+name: 构建 水原千鹤 APK
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      compileSdk:
+        description: 'compileSdk（默认 36；公开 SDK 最高就是 android-36）'
+        required: false
+        default: '36'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # GitHub 的 ubuntu runner 自带 Android SDK，不需要再装
+      # （原来用 android-actions/setup-android 会去装已废弃的 tools 包而失败）
+      - name: Locate Android SDK & accept licenses
+        run: |
+          SDK="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
+          echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+          ls "$SDK/platforms" || true
+          MGR="$SDK/cmdline-tools/latest/bin/sdkmanager"
+          [ -x "$MGR" ] || MGR="$(ls -d "$SDK"/cmdline-tools/*/bin/sdkmanager 2>/dev/null | tail -1)"
+          echo "sdkmanager=$MGR"
+          yes | "$MGR" --licenses > /dev/null 2>&1 || true
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Build release APK
+        run: |
+          ./gradlew :app:assembleRelease --no-daemon --stacktrace \
+            -Pmysticsky.compileSdk=${{ github.event.inputs.compileSdk || '36' }}
+
+      - name: Show APK
+        run: ls -lh app/build/outputs/apk/release/
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: 水原千鹤-未签名APK
+          path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
