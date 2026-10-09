@@ -15,6 +15,7 @@ import io.github.libxposed.api.XposedModule
 import com.astraflow.MysticSky.lyric.Constants
 import com.astraflow.MysticSky.lyric.HookCrashLog
 import com.astraflow.MysticSky.lyric.ModuleLogger
+import com.astraflow.MysticSky.settings.ModulePrefs
 import io.github.proify.lyricon.lyric.model.RichLyricLine
 import io.github.proify.lyricon.lyric.model.Song
 import io.github.proify.lyricon.provider.LyriconFactory
@@ -266,8 +267,15 @@ internal class MitianLyricProvider(
         mainHandler.post(meloRetry)
     }
 
+    private fun lyricAllowed(): Boolean = runCatching {
+        val prefs = module.getRemotePreferences(ModulePrefs.NAME)
+        prefs.getBoolean(ModulePrefs.KEY_ENABLED, true) &&
+            prefs.getBoolean(ModulePrefs.KEY_LYRIC, true)
+    }.getOrDefault(true)
+
     private fun onMetadataChanged(session: MediaSession?, metadata: MediaMetadata?) {
         metadata ?: return
+        if (!lyricAllowed()) return
         val duration = metadata.getLong(MediaMetadata.METADATA_KEY_DURATION)
         if (duration > 0) metadataDurationMs = duration
 
@@ -316,6 +324,7 @@ internal class MitianLyricProvider(
     }
 
     private fun refreshFromDisk() {
+        if (!lyricAllowed()) return
         val context = application ?: return
         try {
             val nowPlaying = readAppFile(context, Constants.NOW_PLAYING_FILE)
@@ -368,6 +377,7 @@ internal class MitianLyricProvider(
 
     private fun onPlaybackStateChanged(session: MediaSession?, state: PlaybackState?) {
         state ?: return
+        if (!lyricAllowed()) return
 
         ensureStarted()
 
@@ -464,6 +474,7 @@ internal class MitianLyricProvider(
     }
 
     private fun onNowPlayingWritten(content: String?) {
+        if (!lyricAllowed()) return
         if (content.isNullOrBlank()) return
         val obj = runCatching { JSONObject(content) }.getOrNull() ?: return
         val rid = obj.optString("rid").takeIf { it.isNotBlank() && it != "null" }
@@ -520,6 +531,7 @@ internal class MitianLyricProvider(
     }
 
     private fun onLyricsWritten(context: Context?, content: String?) {
+        if (!lyricAllowed()) return
         val text = content ?: run {
             context?.let { readAppFile(it, Constants.SONG_LYRIC_FILE) }
         } ?: return
@@ -537,6 +549,7 @@ internal class MitianLyricProvider(
     }
 
     private fun replayFromDisk(context: Context) {
+        if (!lyricAllowed()) return
         val nowPlaying = readAppFile(context, Constants.NOW_PLAYING_FILE)
         val songLyric = readAppFile(context, Constants.SONG_LYRIC_FILE)
         logger.info(

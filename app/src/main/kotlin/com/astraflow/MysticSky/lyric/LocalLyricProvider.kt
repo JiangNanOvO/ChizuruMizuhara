@@ -11,6 +11,7 @@ import android.os.Looper
 import android.os.SystemClock
 import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModule
+import com.astraflow.MysticSky.settings.ModulePrefs
 import io.github.proify.lyricon.lyric.model.RichLyricLine
 import io.github.proify.lyricon.lyric.model.Song
 import io.github.proify.lyricon.provider.LyriconFactory
@@ -209,7 +210,7 @@ internal class LocalLyricProvider(
 
     private fun installSniffer() {
         runCatching {
-            HttpLyricSniffer(module, logger, classLoader) { lyric, source ->
+            HttpLyricSniffer(module, logger, classLoader, isActive = { lyricAllowed() }) { lyric, source ->
                 onNetworkLyric(lyric, source)
             }.install()
         }.onFailure { logger.error("网络歌词嗅探挂载失败", it) }
@@ -217,11 +218,18 @@ internal class LocalLyricProvider(
 
     private fun installRnBridge() {
         runCatching {
-            RnLyricBridge(module, logger, classLoader) { lyric, source -> onNetworkLyric(lyric, source) }.install()
+            RnLyricBridge(module, logger, classLoader, isActive = { lyricAllowed() }) { lyric, source -> onNetworkLyric(lyric, source) }.install()
         }.onFailure { logger.error("RN 歌词嗅探挂载失败", it) }
     }
 
+    private fun lyricAllowed(): Boolean = runCatching {
+        val prefs = module.getRemotePreferences(ModulePrefs.NAME)
+        prefs.getBoolean(ModulePrefs.KEY_ENABLED, true) &&
+            prefs.getBoolean(ModulePrefs.KEY_LYRIC, true)
+    }.getOrDefault(true)
+
     private fun onNetworkLyric(lyric: LocalLyric, source: String, trustedBySource: Boolean = false) {
+        if (!lyricAllowed()) return
         val sniffedAt = SystemClock.elapsedRealtime()
         pendingLyric = Triple(lyric, source, sniffedAt)
         val signature = currentSignature ?: return
@@ -360,6 +368,7 @@ internal class LocalLyricProvider(
 
     private fun onMetadataChanged(metadata: MediaMetadata?) {
         metadata ?: return
+        if (!lyricAllowed()) return
         dumpMetadataExtras(metadata)
         val rawTitle = metadata.getString(MediaMetadata.METADATA_KEY_TITLE)
             ?.takeIf { it.isNotBlank() && it != "未知歌曲" }
@@ -551,6 +560,7 @@ internal class LocalLyricProvider(
 
     private fun onPlaybackStateChanged(state: PlaybackState?) {
         state ?: return
+        if (!lyricAllowed()) return
         val registered = ensureProvider() ?: return
 
         val rawPosition = state.position
@@ -731,6 +741,7 @@ internal class LocalLyricProvider(
     }
 
     private fun tryLookup() {
+        if (!lyricAllowed()) return
         if (lyricFound) return
         val signature = currentSignature ?: return
         val parts = signature.split('|')

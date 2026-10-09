@@ -16,12 +16,14 @@ class MitianApp : Application() {
         ModuleEnabledState.startListening(this)
         val prefs = ModulePrefs.of(this)
 
-        Thread {
-            runCatching { NeriSettingPatcher.ensureEnabled(this) }
-                .onFailure { Log.w(TAG, "neri adapt failed: ${'$'}{it.message}") }
-        }.apply { isDaemon = true; name = "mitian-neri" }.start()
+        if (ModulePrefs.isEnabled(prefs) && ModulePrefs.isNeriAdapt(prefs)) {
+            Thread {
+                runCatching { NeriSettingPatcher.ensureEnabled(this) }
+                    .onFailure { Log.w(TAG, "neri adapt failed: ${'$'}{it.message}") }
+            }.apply { isDaemon = true; name = "mitian-neri" }.start()
+        }
 
-        if (ModulePrefs.isEnabled(prefs) && ModulePrefs.isStandaloneLyric(prefs)) {
+        if (ModulePrefs.isEnabled(prefs) && ModulePrefs.isLyricEnabled(prefs) && ModulePrefs.isStandaloneLyric(prefs)) {
             runCatching { StandaloneLyric.registerInstalled(this) }
                 .onFailure { Log.w(TAG, "standalone register failed: ${'$'}{it.message}") }
             runCatching { KeepAliveService.start(this) }

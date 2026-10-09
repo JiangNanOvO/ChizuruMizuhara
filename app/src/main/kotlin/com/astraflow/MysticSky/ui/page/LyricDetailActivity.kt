@@ -43,12 +43,47 @@ class LyricDetailActivity : BaseActivity() {
                 setChecked(on, animate = false)
                 onCheckedChange = { value ->
                     prefs.edit().putBoolean(ModulePrefs.KEY_LYRIC_STANDALONE, value).apply()
-                    if (value) {
-                        KeepAliveService.start(this@LyricDetailActivity)
-                        toast(getString(R.string.lyric_standalone_on))
-                    } else {
-                        toast(getString(R.string.lyric_standalone_off))
-                    }
+                    syncService(prefs)
+                    toast(getString(if (value) R.string.lyric_standalone_on else R.string.lyric_standalone_off))
+                    rerender()
+                }
+            }
+        )
+        card.addView(row)
+        return card
+    }
+
+    private fun syncService(prefs: android.content.SharedPreferences) {
+        val want = ModulePrefs.isEnabled(prefs) && (
+            (ModulePrefs.isLyricEnabled(prefs) && ModulePrefs.isStandaloneLyric(prefs)) ||
+                (ModulePrefs.isLinkEnabled(prefs) && ModulePrefs.isKeepAlive(prefs))
+            )
+        if (want) KeepAliveService.start(this) else KeepAliveService.stop(this)
+    }
+
+    private fun buildNeriCard(): LinearLayout {
+        val prefs = ModulePrefs.of(this)
+        val card = ui.glassCard()
+        card.setPadding(ui.dp(16), ui.dp(16), ui.dp(16), ui.dp(16))
+        val on = ModulePrefs.isNeriAdapt(prefs)
+
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        row.addView(
+            ui.column(
+                getString(R.string.neri_adapt),
+                getString(R.string.neri_adapt_sub)
+            ),
+            ui.weight()
+        )
+        row.addView(
+            GlassSwitch(this).apply {
+                setChecked(on, animate = false)
+                onCheckedChange = { value ->
+                    prefs.edit().putBoolean(ModulePrefs.KEY_NERI_ADAPT, value).apply()
+                    toast(getString(if (value) R.string.neri_adapt_on else R.string.neri_adapt_off))
                     rerender()
                 }
             }
@@ -107,6 +142,7 @@ class LyricDetailActivity : BaseActivity() {
             setChecked(on, animate = false)
             onCheckedChange = { value ->
                 prefs.edit().putBoolean(ModulePrefs.KEY_LYRIC, value).apply()
+                syncService(prefs)
             }
         }
         statusRow.addView(toggle)
@@ -120,6 +156,11 @@ class LyricDetailActivity : BaseActivity() {
         val standaloneCard = buildStandaloneCard()
         body.addView(standaloneCard)
         Motion.fadeInUp(standaloneCard, 30L)
+
+        body.addView(ui.gap(8))
+        val neriCard = buildNeriCard()
+        body.addView(neriCard)
+        Motion.fadeInUp(neriCard, 45L)
 
         body.addView(ui.gap(14))
 

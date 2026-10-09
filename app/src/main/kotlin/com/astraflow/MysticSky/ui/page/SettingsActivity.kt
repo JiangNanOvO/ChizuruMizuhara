@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.widget.LinearLayout
 import com.astraflow.MysticSky.R
 import com.astraflow.MysticSky.capability.link.LinkHub
+import com.astraflow.MysticSky.keepalive.KeepAliveService
 import com.astraflow.MysticSky.settings.ModuleEnabledState
 import com.astraflow.MysticSky.settings.ModulePrefs
 import com.astraflow.MysticSky.ui.widget.Motion
@@ -72,6 +73,9 @@ class SettingsActivity : BaseActivity() {
                 ModulePrefs.isEnabled(prefs),
                 onToggle = { value ->
                 prefs.edit().putBoolean(ModulePrefs.KEY_ENABLED, value).apply()
+                if (!value) {
+                    runCatching { KeepAliveService.stop(this) }
+                }
                 toast(getString(if (value) R.string.ui_enable_on else R.string.ui_enable_off))
             })
         )

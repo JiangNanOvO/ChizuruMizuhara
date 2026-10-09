@@ -7,6 +7,7 @@ import android.util.Log
 import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModule
 import com.astraflow.MysticSky.redactUrl
+import com.astraflow.MysticSky.settings.ModulePrefs
 
 internal class LinkHook(
     private val module: XposedModule,
@@ -59,6 +60,7 @@ internal class LinkHook(
 
     private fun onClipSet(service: Any?, args: List<Any?>) {
         try {
+            if (!linksAllowed()) return
             val clip = args.getOrNull(0) as? ClipData ?: return
             if (clip.itemCount == 0) return
             val text = runCatching {
@@ -78,6 +80,12 @@ internal class LinkHook(
 
         }
     }
+
+    private fun linksAllowed(): Boolean = runCatching {
+        val prefs = module.getRemotePreferences(ModulePrefs.NAME)
+        prefs.getBoolean(ModulePrefs.KEY_ENABLED, true) &&
+            prefs.getBoolean(ModulePrefs.KEY_LINK, true)
+    }.getOrDefault(true)
 
     private fun push(service: Any?, url: String) {
         val ctx = sysContext ?: resolveContext(service).also { sysContext = it }

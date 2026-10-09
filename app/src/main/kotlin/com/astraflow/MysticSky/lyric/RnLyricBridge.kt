@@ -9,6 +9,7 @@ internal class RnLyricBridge(
     private val module: XposedModule,
     private val logger: ModuleLogger,
     private val classLoader: ClassLoader,
+    private val isActive: () -> Boolean = { true },
     private val onLyric: (LocalLyric, String) -> Unit
 ) {
 
@@ -82,6 +83,7 @@ internal class RnLyricBridge(
     }
 
     private fun submitLx(lrc: String, tlrc: String?, rlrc: String?) {
+        if (!isActive()) return
         val key = lrc.length * 31 + lrc.hashCode()
         synchronized(seen) {
             if (seen.contains(key)) return
@@ -227,6 +229,7 @@ internal class RnLyricBridge(
 
     private fun handle(value: Any?, source: String) {
         if (value == null) return
+        if (!isActive()) return
         val strings = ArrayList<String>(4)
         runCatching { collect(value, 0, strings) }
         if (strings.isEmpty()) return
