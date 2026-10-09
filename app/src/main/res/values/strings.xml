@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">水原千鹤</string>
-    <string name="app_name_launcher">水原千鹤</string>
+    <string name="app_name">Chizuru</string>
+    <string name="app_name_launcher">Chizuru</string>
 
-    <string name="xposed_description">水原千鹤 · 星流增强插件。勾「系统框架」＝在本机读取你每一次复制的内容（仅判断其中有没有链接）；勾音乐应用＝在其进程内读取网络响应与本地缓存来获取歌词。全部本机完成，不联网、不上传、不记录剪贴板原文。</string>
+    <string name="xposed_description">Chizuru · 星流增强插件。勾「系统框架」＝在本机读取你每一次复制的内容（仅判断其中有没有链接）；勾音乐应用＝在其进程内读取网络响应与本地缓存来获取歌词。全部本机完成，不联网、不上传、不记录剪贴板原文。</string>
 
-    <string name="lyricon_module_author">水原千鹤</string>
-    <string name="lyricon_module_description">水原千鹤-星流增强插件。能力：歌词胶囊、链接助手。歌词端基于 LyricON 协议：在音乐应用内读取其网络响应与本地歌词缓存来取得歌词；链接助手在系统框架内读取每一次复制的内容，仅在本机判断其中是否含链接。全部本机完成，不联网、不上传。</string>
+    <string name="lyricon_module_author">Chizuru</string>
+    <string name="lyricon_module_description">Chizuru-星流增强插件。能力：歌词胶囊、链接助手。歌词端基于 LyricON 协议：在音乐应用内读取其网络响应与本地歌词缓存来取得歌词；链接助手在系统框架内读取每一次复制的内容，仅在本机判断其中是否含链接。全部本机完成，不联网、不上传。</string>
 
     <string name="home_subtitle">星流插件</string>
 
@@ -23,7 +23,7 @@
     <string name="cap_more_desc">后续更新会在这里出现 Ciaiio~ (∠・ω&lt;） ⌒☆</string>
 
     <string name="home_settings">设置</string>
-    <string name="home_about">关于水原千鹤</string>
+    <string name="home_about">关于Chizuru</string>
 
     <string name="lyric_detail_title">歌词胶囊</string>
     <string name="lyric_status_ready">已生效</string>
@@ -43,13 +43,13 @@
     <string name="link_card_expand">自动展开提示</string>
     <string name="link_card_quiet">安静显示（只出胶囊）</string>
     <string name="link_card_pick">卡片出现时怎么显示</string>
-    <string name="link_fix_title">不用回到水原千鹤就能跳转了-全机型通用</string>
-    <string name="link_fix_body">跳转目标在识别到链接的那一刻就编成了「待发意图」交给星河岛。你在岛上点卡片时，是星河岛自己把浏览器拉起来：水原千鹤的进程冻着、被杀掉、甚至从没打开过，都不影响。\n\n所以卡片上没有「打开」按钮 —— 那颗按钮要靠水原千鹤进程回调，进程一冻就是死的。整张卡片就是打开链接的按钮。\n\n「忽略」按钮走水原千鹤进程，进程活着时随手可关；进不来也没关系：卡片 3 分钟后自己消失，也可以直接把它划走。</string>
+    <string name="link_fix_title">不用回到Chizuru就能跳转了-全机型通用</string>
+    <string name="link_fix_body">跳转目标在识别到链接的那一刻就编成了「待发意图」交给星河岛。你在岛上点卡片时，是星河岛自己把浏览器拉起来：Chizuru的进程冻着、被杀掉、甚至从没打开过，都不影响。\n\n所以卡片上没有「打开」按钮 —— 那颗按钮要靠Chizuru进程回调，进程一冻就是死的。整张卡片就是打开链接的按钮。\n\n「忽略」按钮走Chizuru进程，进程活着时随手可关；进不来也没关系：卡片 3 分钟后自己消失，也可以直接把它划走。</string>
     <string name="link_test">投一张测试卡片</string>
     <string name="link_test_short">走一遍完整流程</string>
     <string name="link_test_desc">用示例链接走一遍完整流程，然后去星河岛上看效果-可能会有延迟 实际使用不会</string>
     <string name="link_test_open">在本机直接试跳一次</string>
-    <string name="link_test_fail">没投出去：检查星流是否已安装、星河岛是否已开启、水原千鹤是否被后台限制。</string>
+    <string name="link_test_fail">没投出去：检查星流是否已安装、星河岛是否已开启、Chizuru是否被后台限制。</string>
     <string name="link_test_posted">已投到星河岛：去看一眼，点卡片应该能直接打开浏览器</string>
     <string name="link_sdk">接入库版本</string>
 
@@ -59,9 +59,9 @@
     <string name="ui_btn_lsposed">启动 LSPosed</string>
 
     <string name="ui_title_apps">适配应用清单</string>
-    <string name="ui_apps_body">酷狗音乐、酷狗概念版、酷我音乐、QQ 音乐、汽水音乐、网易云音乐、OPPO ／ 欢太音乐、波点音乐、MeloYou、洛雪音乐助手、音理音理。\n\n音理音理：水原千鹤会自动打开它的外部歌词输出，用户无需在它自己的设置里操作。\n\n其它应用：勾选作用域后自动尝试本地缓存与网络嗅探。</string>
+    <string name="ui_apps_body">酷狗音乐、酷狗概念版、酷我音乐、QQ 音乐、汽水音乐、网易云音乐、OPPO ／ 欢太音乐、波点音乐、MeloYou、洛雪音乐助手、音理音理。\n\n音理音理：Chizuru会自动打开它的外部歌词输出，用户无需在它自己的设置里操作。\n\n其它应用：勾选作用域后自动尝试本地缓存与网络嗅探。</string>
 
-    <string name="ui_title_about">关于水原千鹤</string>
+    <string name="ui_title_about">关于Chizuru</string>
     <string name="ui_title_author">作者</string>
     <string name="ui_sub_author">江南の千愁</string>
     <string name="ui_title_feedback">反馈</string>
@@ -73,11 +73,11 @@
     <string name="ui_title_update">项目主页</string>
     <string name="ui_sub_update">仓库仅用于审核用不更新</string>
 
-    <string name="ui_about_body">水原千鹤是星流AstraFlow的增强插件，把正在播放的歌词和复制内容里的链接送到星河岛\n\n链接部分使用星河岛官方接入库astraisland-sdk 0.1.0，跳转目标直接编成待发意图交给星河岛，点卡片即开，不依赖水原千鹤进程。\n\n歌词部分基于 LyricON「歌词提供者」协议：优先读播放器自己缓存好的歌词，读不到再只读旁路嗅探网络歌词，不改播放器行为。\n\n全部在本机完成。\n\n在 LSPosed 里启用模块并勾选目标应用，重启应用即可。</string>
+    <string name="ui_about_body">Chizuru是星流AstraFlow的增强插件，把正在播放的歌词和复制内容里的链接送到星河岛\n\n链接部分使用星河岛官方接入库astraisland-sdk 0.1.0，跳转目标直接编成待发意图交给星河岛，点卡片即开，不依赖Chizuru进程。\n\n歌词部分基于 LyricON「歌词提供者」协议：优先读播放器自己缓存好的歌词，读不到再只读旁路嗅探网络歌词，不改播放器行为。\n\n全部在本机完成。\n\n在 LSPosed 里启用模块并勾选目标应用，重启应用即可。</string>
 
-    <string name="ui_author_body">水原千鹤\n\n链接助手按星河岛公开接口重写。\n\n免费公益，禁止倒卖与付费代装</string>
+    <string name="ui_author_body">Chizuru\n\n链接助手按星河岛公开接口重写。\n\n免费公益，禁止倒卖与付费代装</string>
 
-    <string name="ui_free_body">水原千鹤免费开源，遵循 MIT 许可。请勿商用或二次售卖。</string>
+    <string name="ui_free_body">Chizuru免费开源，遵循 MIT 许可。请勿商用或二次售卖。</string>
 
     <string name="ui_need_lsposed">未检测到 LSPosed 管理器</string>
     <string name="ui_hide_on">已隐藏桌面图标</string>
@@ -105,12 +105,12 @@
     <string name="link_keepalive_desc">挂一条静默通知把进程钉住，复制链接立刻上岛。关掉即彻底消失</string>
     <string name="link_keepalive_on">已开启保活：通知栏会出现一条静默通知</string>
     <string name="link_keepalive_off">已关闭保活</string>
-    <string name="keepalive_channel">水原千鹤保活</string>
+    <string name="keepalive_channel">Chizuru保活</string>
     <string name="keepalive_channel_desc">保持链接助手随时可用（静默、不打扰）</string>
-    <string name="keepalive_notify_title">水原千鹤正在保活</string>
+    <string name="keepalive_notify_title">Chizuru正在保活</string>
 
     <string name="lyric_standalone">独立提供者（root）</string>
-    <string name="lyric_standalone_sub">水原千鹤自己当提供者，播放器被杀也不断词</string>
+    <string name="lyric_standalone_sub">Chizuru自己当提供者，播放器被杀也不断词</string>
     <string name="lyric_standalone_on">已开启：正在用 root 读播放状态与歌词缓存</string>
     <string name="lyric_standalone_off">已关闭独立提供者</string>
     <string name="neri_adapt">音理音理适配（root）</string>
@@ -122,10 +122,10 @@
     <string name="sponsor_title">公益赞助</string>
     <string name="sponsor_scan">扫码请我喝杯咖啡</string>
     <string name="sponsor_note">完全自愿 · 不影响任何功能</string>
-    <string name="sponsor_statement">声明\n\n· 水原千鹤是免费公益插件，全部功能不收费；禁止倒卖、禁止付费代装。\n· 插件在本机运行：不联网、不上传、不记录剪贴板原文。\n· 一切以开源仓库为准；仓库仅用于审核用，不常更新。\n\n感谢\n\n· 星流 AstraFlow —— 星河岛平台与官方接入库。\n· 星河 AstraGalaxy（作者 yiyi，MIT）—— 歌词能力的源头。\n· LyricON / 词幕 —— 歌词提供者协议。\n· 以及每一个愿意花时间反馈问题的人。\n\n如果这份插件帮到了你，随时可以请我喝一杯；不请也完全一样用，所有功能都不会少。</string>
+    <string name="sponsor_statement">声明\n\n· Chizuru是免费公益插件，全部功能不收费；禁止倒卖、禁止付费代装。\n· 插件在本机运行：不联网、不上传、不记录剪贴板原文。\n· 一切以开源仓库为准；仓库仅用于审核用，不常更新。\n\n感谢\n\n· 星流 AstraFlow —— 星河岛平台与官方接入库。\n· 星河 AstraGalaxy（作者 yiyi，MIT）—— 歌词能力的源头。\n· LyricON / 词幕 —— 歌词提供者协议。\n· 以及每一个愿意花时间反馈问题的人。\n\n如果这份插件帮到了你，随时可以请我喝一杯；不请也完全一样用，所有功能都不会少。</string>
 
     <string name="sec_status">运行状态</string>
-    <string name="sec_module">水原千鹤模块</string>
+    <string name="sec_module">Chizuru模块</string>
     <string name="sec_island">星河岛</string>
     <string name="sec_features">功能</string>
     <string name="sec_about">关于</string>

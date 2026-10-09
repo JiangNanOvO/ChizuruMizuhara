@@ -92,7 +92,7 @@
 
         <provider
             android:name=".app.LinkInboxProvider"
-            android:authorities="com.astraflow.MysticSky.inbox"
+            android:authorities="com.astraflow.Chizuru.inbox"
             android:exported="true"
             android:grantUriPermissions="false" />
 

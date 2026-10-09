@@ -1,4 +1,4 @@
-# 安全说明 · 谜天
+# 安全说明
 
 这份文档回答三个问题：**它要什么权限**、**它把数据发到哪去**、**你怎么自己验证**。
 
@@ -11,7 +11,7 @@
 
 ```
 com.astraflow.tool.island.permission.PUBLISH_ACTIVITY   星流 SDK 用来向星河岛投送卡片
-com.astraflow.MysticSky.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION   构建工具自动加的（仅本应用内广播）
+com.astraflow.Chizuru.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION   构建工具自动加的（仅本应用内广播）
 ```
 
 **没有 `INTERNET`**。这一点可以直接验证：

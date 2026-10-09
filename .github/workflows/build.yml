@@ -1,4 +1,4 @@
-name: 构建 水原千鹤 APK
+name: 构建 Chizuru APK
 
 on:
   push:
@@ -54,6 +54,6 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: 水原千鹤-未签名APK
+          name: Chizuru-未签名APK
           path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error

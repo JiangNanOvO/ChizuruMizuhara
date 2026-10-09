@@ -1,8 +1,8 @@
-# 水原千鹤
+# Chizuru
 
 > 星流（AstraFlow）· 星河岛的增强插件：把**正在播放的歌词**、以及**复制内容里的链接**送上岛。
 
-LSPosed 模块 · 应用名 **水原千鹤** · 包名 `com.astraflow.MysticSky`（技术标识，不影响显示）· 免费公益，禁止倒卖与付费代装
+LSPosed 模块 · 应用名 **Chizuru** · 包名 `com.astraflow.Chizuru`（技术标识，不影响显示）· 免费公益，禁止倒卖与付费代装
 
 ---
 
@@ -60,7 +60,7 @@ LSPosed 模块 · 应用名 **水原千鹤** · 包名 `com.astraflow.MysticSky`
 
 ## 许可
 
-水原千鹤自己的代码 MIT（见 [LICENSE](LICENSE)）。
+Chizuru自己的代码 MIT（见 [LICENSE](LICENSE)）。
 
 ⚠️ `app/libs/astraisland-sdk-0.1.0.aar` 是星流的星河岛接入库，按
 **PolyForm Noncommercial License 1.0.0** 授权：**只能非商业用途**；

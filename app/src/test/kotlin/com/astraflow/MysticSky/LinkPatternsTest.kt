@@ -1,6 +1,6 @@
-package com.astraflow.MysticSky
+package com.astraflow.Chizuru
 
-import com.astraflow.MysticSky.capability.link.LinkPatterns
+import com.astraflow.Chizuru.capability.link.LinkPatterns
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

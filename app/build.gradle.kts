@@ -22,11 +22,11 @@ val compileSdkVersion: Int =
     (project.findProperty("mysticsky.compileSdk") as String?)?.toIntOrNull() ?: 36
 
 android {
-    namespace = "com.astraflow.MysticSky"
+    namespace = "com.astraflow.Chizuru"
     compileSdk = compileSdkVersion
 
     defaultConfig {
-        applicationId = "com.astraflow.MysticSky"
+        applicationId = "com.astraflow.Chizuru"
         minSdk = 27
         targetSdk = 36
         versionCode = versionProps.getProperty("versionCode").trim().toInt()
@@ -52,16 +52,21 @@ android {
                 
 
                 
-                println("[水原千鹤] 未配置私有签名：release 产物将是未签名的。")
-                println("[水原千鹤] 在 local.properties 里写 mitian.storeFile / mitian.storePassword / mitian.keyAlias / mitian.keyPassword")
+                println("[Chizuru] 未配置私有签名：release 产物将是未签名的。")
+                println("[Chizuru] 在 local.properties 里写 mitian.storeFile / mitian.storePassword / mitian.keyAlias / mitian.keyPassword")
             }
         }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
-            isShrinkResources = false
+            // 开启 R8 死代码消除 + 资源压缩（规则见 app/proguard-rules.pro）
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
             if (customStoreFile != null) {
                 signingConfig = signingConfigs.getByName("release")
             }
