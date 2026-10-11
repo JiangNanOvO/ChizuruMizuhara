@@ -4,7 +4,6 @@ import android.app.Application
 import android.util.Log
 import com.astraflow.Chizuru.capability.link.LinkHub
 import com.astraflow.Chizuru.keepalive.KeepAliveService
-import com.astraflow.Chizuru.settings.ModuleEnabledState
 import com.astraflow.Chizuru.settings.ModulePrefs
 import com.astraflow.Chizuru.capability.lyricprovider.StandaloneLyric
 import com.astraflow.Chizuru.capability.neriplayer.NeriSettingPatcher
@@ -13,7 +12,6 @@ class MitianApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        ModuleEnabledState.startListening(this)
         val prefs = ModulePrefs.of(this)
 
         if (ModulePrefs.isEnabled(prefs) && ModulePrefs.isNeriAdapt(prefs)) {

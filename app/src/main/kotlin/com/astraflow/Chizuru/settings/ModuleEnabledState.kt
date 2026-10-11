@@ -1,7 +1,6 @@
 package com.astraflow.Chizuru.settings
 
 import android.content.Context
-import android.content.Intent
 
 object ModuleEnabledState {
 
@@ -20,32 +19,6 @@ object ModuleEnabledState {
     fun frameworkName(context: Context): String? = runCatching {
         ModulePrefs.of(context).getString(KEY_FRAMEWORK_NAME, null)
     }.getOrNull()
-
-    private const val ACTION_ALIVE = "com.astraflow.Chizuru.action.ALIVE"
-    private const val EXTRA_FRAMEWORK = "framework"
-
-    @Volatile
-    private var listening = false
-
-    fun startListening(context: Context) {
-        if (listening) return
-        listening = true
-        val app = context.applicationContext
-        runCatching {
-            val receiver = object : android.content.BroadcastReceiver() {
-                override fun onReceive(ctx: Context?, intent: Intent?) {
-                    if (intent?.action != ACTION_ALIVE) return
-                    markLoaded(app, intent.getStringExtra(EXTRA_FRAMEWORK))
-                }
-            }
-
-            app.registerReceiver(
-                receiver,
-                android.content.IntentFilter(ACTION_ALIVE),
-                Context.RECEIVER_EXPORTED
-            )
-        }
-    }
 
     fun markLoaded(context: Context, framework: String?, moduleVersion: Int = 0) {
         runCatching {

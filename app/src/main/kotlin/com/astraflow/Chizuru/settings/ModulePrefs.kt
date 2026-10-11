@@ -39,7 +39,7 @@ object ModulePrefs {
 
     fun isKeepAlive(s: SharedPreferences): Boolean = s.getBoolean(KEY_KEEP_ALIVE, true)
 
-    fun isStandaloneLyric(s: SharedPreferences): Boolean = s.getBoolean(KEY_LYRIC_STANDALONE, true)
+    fun isStandaloneLyric(s: SharedPreferences): Boolean = s.getBoolean(KEY_LYRIC_STANDALONE, false)
 
     fun isNeriAdapt(s: SharedPreferences): Boolean = s.getBoolean(KEY_NERI_ADAPT, false)
 

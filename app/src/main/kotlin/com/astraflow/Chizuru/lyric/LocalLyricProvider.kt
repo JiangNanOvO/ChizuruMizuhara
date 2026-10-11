@@ -130,29 +130,10 @@ internal class LocalLyricProvider(
         hookApplicationLifecycle()
         hookMediaSession()
         installSniffer()
-        installBluetoothBoost()
         logger.info(
             "Local lyric hooks installed for $hostPackage " +
                 "(${recipe?.displayName ?: "通用嗅探"}) in $processName"
         )
-    }
-
-    private fun installBluetoothBoost() {
-        if (hostPackage !in Constants.BLUETOOTH_BOOST_PACKAGES) return
-        val targets = listOf(
-            "android.media.AudioManager" to "isBluetoothA2dpOn",
-            "android.bluetooth.BluetoothAdapter" to "isEnabled"
-        )
-        for ((className, methodName) in targets) {
-            try {
-                val clazz = Class.forName(className, false, classLoader)
-                val method = clazz.getDeclaredMethod(methodName)
-                module.hook(method).intercept { true }
-                logger.info("蓝牙输出伪装已挂载：$className#$methodName")
-            } catch (throwable: Throwable) {
-                logger.warn("蓝牙输出伪装失败：$className#$methodName（${throwable.message}）")
-            }
-        }
     }
 
     private fun ensureProvider(): LyriconProvider? {

@@ -20,8 +20,6 @@ object Constants {
         QQ_PACKAGE
     )
 
-    val BLUETOOTH_BOOST_PACKAGES: Set<String> = setOf(KUWO_PACKAGE, LUNA_PACKAGE)
-
     const val PREFS_NAME: String = "mitian_settings"
     const val KEY_ENABLED: String = "module_enabled"
     const val KEY_HIDE_ICON: String = "hide_launcher_icon"
