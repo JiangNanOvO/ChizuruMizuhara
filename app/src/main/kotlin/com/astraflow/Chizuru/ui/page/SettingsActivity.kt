@@ -1,18 +1,17 @@
 package com.astraflow.Chizuru.ui.page
 
-import android.content.ComponentName
 import android.content.Intent
 import android.content.SharedPreferences
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.widget.LinearLayout
+import android.widget.TextView
 import com.astraflow.Chizuru.R
 import com.astraflow.Chizuru.capability.link.LinkHub
 import com.astraflow.Chizuru.keepalive.KeepAliveService
 import com.astraflow.Chizuru.settings.ModuleEnabledState
 import com.astraflow.Chizuru.settings.ModulePrefs
-import com.astraflow.Chizuru.ui.widget.Motion
+import com.astraflow.Chizuru.ui.ios.SectionTokens
 import com.astraflow.Chizuru.ui.widget.UIKit
 
 class SettingsActivity : BaseActivity() {
@@ -24,125 +23,169 @@ class SettingsActivity : BaseActivity() {
         ui = UIKit(this)
         prefs = ModulePrefs.of(this)
         syncLauncherIcon()
-        setContentView(wrapPage(scrollable(buildContent())))
+        render()
     }
 
-    private fun buildContent(): LinearLayout {
+    private fun render() {
+        val (content, title) = buildContent()
+        val scroll = scrollable(content)
+        bindLargeTitle(scroll, title)
+        setContentView(wrapPage(scroll))
+    }
+
+    private fun buildContent(): Pair<LinearLayout, TextView> {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(ui.dp(18), ui.dp(26), ui.dp(18), ui.dp(44))
+            setPadding(
+                ui.dp(SectionTokens.PAGE_INSET),
+                ui.dp(20),
+                ui.dp(SectionTokens.PAGE_INSET),
+                ui.dp(40),
+            )
         }
 
-        root.addView(ui.pageHeader(getString(R.string.home_settings)) {
-            showSheet(getString(R.string.ui_title_about), getString(R.string.ui_about_body))
-        })
-        root.addView(ui.gap(22))
+        root.addView(
+            android.widget.LinearLayout(this).apply {
+                orientation = android.widget.LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.END
+                addView(
+                    ui.helpButton {
+                        showSheet(getString(R.string.ui_title_about), getString(R.string.ui_about_body))
+                    },
+                )
+            },
+        )
+        root.addView(ui.gap(6))
+
+        val title = ui.largeTitle(getString(R.string.home_settings))
+        root.addView(title)
+        root.addView(ui.gap(18))
 
         root.addView(ui.sectionHeader(getString(R.string.sec_status)))
-        root.addView(ui.gap(8))
         val status = ui.glassCard()
         status.addView(
-            ui.valueRow(getString(R.string.sec_module), onOff(ModuleEnabledState.isModuleEnabled(this)))
+            ui.valueRow(
+                getString(R.string.sec_module),
+                onOff(ModuleEnabledState.isModuleEnabled(this)),
+            ),
         )
-        status.addView(ui.divider(18))
+        status.addView(ui.divider())
         status.addView(
             ui.valueRow(
                 getString(R.string.cap_lyric),
-                onOff(ModulePrefs.isEnabled(prefs) && ModulePrefs.isLyricEnabled(prefs))
-            )
+                onOff(ModulePrefs.isEnabled(prefs) && ModulePrefs.isLyricEnabled(prefs)),
+            ),
         )
-        status.addView(ui.divider(18))
+        status.addView(ui.divider())
         status.addView(
             ui.valueRow(
                 getString(R.string.cap_link),
-                onOff(ModulePrefs.isEnabled(prefs) && ModulePrefs.isLinkEnabled(prefs))
-            )
+                onOff(ModulePrefs.isEnabled(prefs) && ModulePrefs.isLinkEnabled(prefs)),
+            ),
         )
-        status.addView(ui.divider(18))
+        status.addView(ui.divider())
         status.addView(ui.valueRow(getString(R.string.sec_island), islandLabel()))
         root.addView(status)
-        Motion.fadeInUp(status, 0L)
 
-        root.addView(ui.gap(22))
+        root.addView(ui.gap(SectionTokens.SPLIT_PADDING))
         root.addView(ui.sectionHeader(getString(R.string.sec_features)))
-        root.addView(ui.gap(8))
         val features = ui.glassCard()
         features.addView(
             ui.switchRow(
-                getString(R.string.ui_switch_enable),
-                ModulePrefs.isEnabled(prefs),
+                title = getString(R.string.ui_switch_enable),
+                checked = ModulePrefs.isEnabled(prefs),
                 onToggle = { value ->
-                prefs.edit().putBoolean(ModulePrefs.KEY_ENABLED, value).apply()
-                if (!value) {
-                    runCatching { KeepAliveService.stop(this) }
-                }
-                toast(getString(if (value) R.string.ui_enable_on else R.string.ui_enable_off))
-            })
+                    prefs.edit().putBoolean(ModulePrefs.KEY_ENABLED, value).apply()
+                    if (!value) {
+                        runCatching { KeepAliveService.stop(this) }
+                    }
+                    toast(getString(if (value) R.string.ui_enable_on else R.string.ui_enable_off))
+                },
+            ),
         )
-        features.addView(ui.divider(18))
+        features.addView(ui.divider())
         features.addView(
             ui.switchRow(
-                getString(R.string.ui_switch_hide),
-                ModulePrefs.isHideIcon(prefs),
+                title = getString(R.string.ui_switch_hide),
+                checked = ModulePrefs.isHideIcon(prefs),
                 onToggle = { value ->
-                setLauncherIconHidden(value)
-                prefs.edit().putBoolean(ModulePrefs.KEY_HIDE_ICON, value).apply()
-                toast(getString(if (value) R.string.ui_hide_on else R.string.ui_hide_off))
-            })
+                    setLauncherIconHidden(value)
+                    prefs.edit().putBoolean(ModulePrefs.KEY_HIDE_ICON, value).apply()
+                    toast(getString(if (value) R.string.ui_hide_on else R.string.ui_hide_off))
+                },
+                note = getString(R.string.ui_switch_hide_hint),
+            ),
         )
-        features.addView(ui.divider(18))
-        features.addView(ui.actionRow(getString(R.string.ui_btn_lsposed)) { openLsposed() })
+        features.addView(ui.divider())
+        features.addView(
+            ui.actionRow(getString(R.string.ui_btn_lsposed)) { openLsposed() },
+        )
         root.addView(features)
-        Motion.fadeInUp(features, 60L)
 
-        root.addView(ui.gap(22))
+        root.addView(ui.gap(SectionTokens.SPLIT_PADDING))
         root.addView(ui.sectionHeader(getString(R.string.sec_about)))
-        root.addView(ui.gap(8))
         val about = ui.glassCard()
         about.addView(
-            ui.valueRow(getString(R.string.ui_title_author), getString(R.string.ui_sub_author)) {
-                showSheet(getString(R.string.ui_title_author), getString(R.string.ui_author_body))
-            }
+            ui.row(
+                iconRes = null,
+                title = getString(R.string.ui_title_author),
+                value = getString(R.string.ui_sub_author),
+                onClick = {
+                    showSheet(getString(R.string.ui_title_author), getString(R.string.ui_author_body))
+                },
+            ),
         )
-        about.addView(ui.divider(18))
+        about.addView(ui.divider())
         about.addView(
-            ui.valueRow(getString(R.string.ui_title_feedback), getString(R.string.ui_sub_feedback)) {
-                copyFeedbackEmail()
-            }
+            ui.row(
+                iconRes = null,
+                title = getString(R.string.ui_title_feedback),
+                value = getString(R.string.ui_sub_feedback),
+                onClick = { copyFeedbackEmail() },
+            ),
         )
-        about.addView(ui.divider(18))
+        about.addView(ui.divider())
         about.addView(
-            ui.valueRow(getString(R.string.ui_title_free)) {
-                showSheet(getString(R.string.ui_title_free), getString(R.string.ui_free_body))
-            }
+            ui.row(
+                iconRes = null,
+                title = getString(R.string.ui_title_free),
+                onClick = {
+                    showSheet(getString(R.string.ui_title_free), getString(R.string.ui_free_body))
+                },
+            ),
         )
-        about.addView(ui.divider(18))
-        about.addView(ui.actionRow(getString(R.string.ui_title_update)) { openProjectPage() })
+        about.addView(ui.divider())
+        about.addView(
+            ui.row(
+                iconRes = null,
+                title = getString(R.string.ui_title_update),
+                onClick = { openProjectPage() },
+            ),
+        )
         root.addView(about)
-        Motion.fadeInUp(about, 120L)
 
-        return root
+        root.addView(ui.gap(SectionTokens.SPLIT_PADDING))
+        root.addView(ui.footerNote(getString(R.string.ui_sub_update)))
+
+        return root to title
     }
 
     private fun onOff(value: Boolean): String =
         getString(if (value) R.string.value_on else R.string.value_off)
 
-    private fun islandLabel(): String {
-        val state = LinkHub.stateName()
-        return when (state) {
-            "NOT_INSTALLED" -> getString(R.string.value_island_missing)
-            "WAITING" -> getString(R.string.value_island_waiting)
-            "REJECTED" -> getString(R.string.value_island_rejected)
-            "READY" -> getString(R.string.value_island_ready)
-            else -> state
-        }
+    private fun islandLabel(): String = when (LinkHub.stateName()) {
+        "NOT_INSTALLED" -> getString(R.string.value_island_missing)
+        "WAITING" -> getString(R.string.value_island_waiting)
+        "REJECTED" -> getString(R.string.value_island_rejected)
+        "READY" -> getString(R.string.value_island_ready)
+        else -> LinkHub.stateName()
     }
 
     private fun showSheet(title: String, body: String) {
         startActivity(
             Intent(this, SheetActivity::class.java)
                 .putExtra(SheetActivity.EXTRA_TITLE, title)
-                .putExtra(SheetActivity.EXTRA_BODY, body)
+                .putExtra(SheetActivity.EXTRA_BODY, body),
         )
     }
 
@@ -153,7 +196,6 @@ class SettingsActivity : BaseActivity() {
         }
         toast(getString(R.string.ui_feedback_copied))
     }
-
 
     private fun openProjectPage() {
         val opened = runCatching {
