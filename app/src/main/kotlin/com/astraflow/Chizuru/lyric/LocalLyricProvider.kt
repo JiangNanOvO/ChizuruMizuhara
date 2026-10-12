@@ -156,7 +156,6 @@ internal class LocalLyricProvider(
                 ).apply {
 
                     
-                    player.setDisplayTranslation(false)
                     player.setDisplayRoma(false)
                     register()
                 }
@@ -850,7 +849,6 @@ internal class LocalLyricProvider(
             return
         }
 
-        for (line in lines) line.translation = null
         if (pendingSwitchAt != 0L) {
             pendingSwitchLyric = LocalLyric(lines, null, null, null, title)
             logger.info("歌词暂存（音频还没切过来）：" + title + "，" + lines.size + " 行")

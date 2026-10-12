@@ -155,7 +155,6 @@ object StandaloneLyric {
             logo = runCatching { ProviderLogo.fromSvg(Constants.ICON) }.getOrNull(),
             processName = "app"
         ).apply {
-            player.setDisplayTranslation(false)
             player.setDisplayRoma(false)
             register()
         }
@@ -209,7 +208,6 @@ object StandaloneLyric {
         lyric: LocalLyric
     ): String {
         val lines = lyric.lines
-        for (line in lines) line.translation = null      
         val lastEnd = lines.lastOrNull()?.end ?: 0L
         val song = Song().apply {
             id = lyric.id ?: now.title

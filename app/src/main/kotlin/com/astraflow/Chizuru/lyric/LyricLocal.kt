@@ -227,14 +227,26 @@ internal object LyricParsers {
         val id = obj.optString("musicId").takeIf { it.isNotBlank() && it != "0" }
 
         val translation = HashMap<Long, String>()
-        for (key in arrayOf("lrcTranslateLyric", "tlyric", "translation", "yrcTranslate")) {
+        for (key in arrayOf(
+            "lrcTranslateLyric",
+            "yrcTranslateLyric",
+            "tlyric",
+            "translation",
+            "yrcTranslate"
+        )) {
             obj.optString(key).takeIf { it.isNotBlank() }?.let { raw ->
                 for ((t, s) in parseNeteaseLines(raw)) translation[t] = s
             }
         }
 
         val roma = HashMap<Long, String>()
-        for (key in arrayOf("romalrc", "roma", "romaLyric")) {
+        for (key in arrayOf(
+            "lrcRomeLyric",
+            "yrcRomeLyric",
+            "romalrc",
+            "roma",
+            "romaLyric"
+        )) {
             obj.optString(key).takeIf { it.isNotBlank() }?.let { raw ->
                 for ((t, s) in parseNeteaseLines(raw)) roma[t] = s
             }
@@ -251,11 +263,25 @@ internal object LyricParsers {
             val end = (sorted.getOrNull(i + 1)?.begin ?: (line.begin + 3000L)).coerceAtLeast(line.begin)
             line.end = end
             line.duration = end - line.begin
-            line.translation = translation[line.begin]
-            line.roma = roma[line.begin]
+            line.translation = nearestLine(translation, line.begin)
+            line.roma = nearestLine(roma, line.begin)
             line
         }
         return LocalLyric(lines, null, null, id, lines.firstOrNull()?.text)
+    }
+
+    private fun nearestLine(table: Map<Long, String>, at: Long, tolerance: Long = 300L): String? {
+        table[at]?.let { return it }
+        var hit: String? = null
+        var bestDelta = Long.MAX_VALUE
+        for ((time, text) in table) {
+            val delta = kotlin.math.abs(time - at)
+            if (delta <= tolerance && delta < bestDelta) {
+                bestDelta = delta
+                hit = text
+            }
+        }
+        return hit
     }
 
     private fun parseNeteaseLines(raw: String): List<Pair<Long, String>> {

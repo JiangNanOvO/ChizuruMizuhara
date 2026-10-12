@@ -181,7 +181,6 @@ internal class MitianLyricProvider(
             logo = ProviderLogo.fromSvg(Constants.ICON)
         ).apply {
 
-            player.setDisplayTranslation(false)
             player.setDisplayRoma(false)
             register()
         }
@@ -668,7 +667,6 @@ internal class MitianLyricProvider(
         if (signature == lastPublishedSignature) return
         lastPublishedSignature = signature
 
-        lyrics?.forEach { it.translation = null }
 
         val song = Song().apply {
             this.id = meta.id!!.let { "meloyou:$it" }
