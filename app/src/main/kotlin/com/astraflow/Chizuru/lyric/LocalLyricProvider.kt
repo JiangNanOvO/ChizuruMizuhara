@@ -130,10 +130,43 @@ internal class LocalLyricProvider(
         hookApplicationLifecycle()
         hookMediaSession()
         installSniffer()
+        installKugouLoader()
+        installAudioOutputBoost()
         logger.info(
             "Local lyric hooks installed for $hostPackage " +
                 "(${recipe?.displayName ?: "通用嗅探"}) in $processName"
         )
+    }
+
+    private fun installKugouLoader() {
+        if (!hostPackage.startsWith("com.kugou")) return
+        runCatching {
+            KugouLyricLoader(module, logger, classLoader) { lyric, source ->
+                onNetworkLyric(lyric, source, trustedBySource = true)
+            }.install()
+        }.onFailure { logger.error("酷狗歌词直挂失败", it) }
+    }
+
+    private fun installAudioOutputBoost() {
+        if (hostPackage !in Constants.AUDIO_OUTPUT_BOOST_PACKAGES) return
+        val targets = listOf(
+            "android.media.AudioManager" to "isBluetoothA2dpOn",
+            "android.bluetooth.BluetoothAdapter" to "isEnabled"
+        )
+        for ((className, methodName) in targets) {
+            runCatching {
+                val clazz = Class.forName(className, false, classLoader)
+                val method = clazz.getDeclaredMethod(methodName)
+                module.hook(method)
+                    .setExceptionMode(XposedInterface.ExceptionMode.PROTECTIVE)
+                    .intercept { chain ->
+                        if (lyricAllowed()) true else chain.proceed()
+                    }
+                logger.info("音频输出状态适配已挂载：$className#$methodName")
+            }.onFailure {
+                logger.warn("音频输出状态适配失败：$className#$methodName（${it.message}）")
+            }
+        }
     }
 
     private fun ensureProvider(): LyriconProvider? {
@@ -155,7 +188,6 @@ internal class LocalLyricProvider(
                     processName = processName
                 ).apply {
 
-                    
                     player.setDisplayRoma(false)
                     register()
                 }
@@ -233,8 +265,6 @@ internal class LocalLyricProvider(
         mainHandler.post {
             if (currentSignature != signature) return@post
 
-            
-
             if (lyricFound) return@post
             everPublished = true
             publish(title, artist, duration, mediaId, lyric.lines, source, lyric.title)
@@ -272,13 +302,11 @@ internal class LocalLyricProvider(
             return false
         }
 
-        
         val lastLine = lyric.lines.lastOrNull()?.begin ?: 0L
         if (durationMs > 0L && lastLine > 0L) {
             val diff = if (lastLine > durationMs) lastLine - durationMs else durationMs - lastLine
             if (diff <= 8_000L) return true
 
-            
             val guess = lyric.firstLine?.trim().orEmpty()
             if (guess.isNotEmpty() && guess.length <= 24 && !guess.startsWith("[")) {
                 val g = LocalLyricFinder.normalize(guess)
@@ -360,8 +388,6 @@ internal class LocalLyricProvider(
 
         if (duration > 0) metadataDurationMs = duration
 
-        
-
         val resolved = PlayerTitle.resolve(
             title = rawTitle,
             artist = rawArtist,
@@ -381,13 +407,6 @@ internal class LocalLyricProvider(
         }
         val artist = resolved.artist
 
-        
-
-        
-
-        
-
-        
         val idChanged = mediaId != null && currentMediaId != null && mediaId != currentMediaId
         val sameSong = resolved.sameSong
         if (idChanged) {
@@ -411,8 +430,6 @@ internal class LocalLyricProvider(
             }
             return
         }
-
-        
 
         currentMediaId = mediaId
         synchronized(stateLock) {
@@ -469,8 +486,6 @@ internal class LocalLyricProvider(
         val registered = ensureProvider()
         if (registered == null) {
 
-            
-
             logger.warn("No provider yet for $title - $artist in $processName（稍后补推）")
         } else {
             runCatching { registered.player.setPosition(0L) }
@@ -478,7 +493,6 @@ internal class LocalLyricProvider(
 
         logger.info("Metadata changed: $title - $artist ($duration) id=$mediaId in $processName")
 
-        
         if (registered != null) publishPlaceholder(title, artist, duration, mediaId)
         publishPending(title, artist, duration, mediaId)
         startProgressTicker()
@@ -508,7 +522,6 @@ internal class LocalLyricProvider(
         lastSongSwitchAt = songSwitchAt
         val now = SystemClock.elapsedRealtime()
 
-        
         val start = 0L
         anchorPosition = start
         anchorRealtime = now
@@ -546,8 +559,6 @@ internal class LocalLyricProvider(
         val rawPosition = state.position
         val playing = playingOf(state.state, rawPosition)
         val speed = state.playbackSpeed.takeIf { it > 0f } ?: 1.0f
-
-        
 
         val nowMs = SystemClock.elapsedRealtime()
         val reportAge = if (state.lastPositionUpdateTime in 1..nowMs) {
@@ -591,6 +602,12 @@ internal class LocalLyricProvider(
             anchorRealtime = SystemClock.elapsedRealtime()
             hasAnchor = true
         }
+        if (!hasAnchor && playing && hostPackage.startsWith("com.kugou")) {
+            anchorPosition = position.coerceAtLeast(0L)
+            anchorRealtime = SystemClock.elapsedRealtime()
+            hasAnchor = true
+            logger.info("酷狗无锚点首播起锚：pos=" + anchorPosition)
+        }
         anchorPlaying = playing
         playbackSpeed = speed
 
@@ -613,7 +630,6 @@ internal class LocalLyricProvider(
             PlaybackState.STATE_SKIPPING_TO_QUEUE_ITEM -> return true
         }
 
-        
         if (hostPackage == "com.kugou.android.lite") return true
         if (lastReportAt <= 0L) return false
         val gap = now - lastReportAt
@@ -633,8 +649,6 @@ internal class LocalLyricProvider(
 
     private fun playingOf(state: Int, position: Long): Boolean = when (state) {
 
-        
-
         PlaybackState.STATE_PAUSED,
         PlaybackState.STATE_STOPPED,
         PlaybackState.STATE_ERROR -> if (position >= 0L) false else anchorPlaying
@@ -645,10 +659,6 @@ internal class LocalLyricProvider(
 
     private fun shouldAcceptAnchor(newPosition: Long, newPlaying: Boolean): Boolean {
         if (!hasAnchor) return true
-
-        
-
-        
 
         val now = SystemClock.elapsedRealtime()
         val sinceSwitch = now - lastSongSwitchAt
@@ -791,7 +801,6 @@ internal class LocalLyricProvider(
             }
             if (found == null) {
 
-                
                 found = try {
                     LocalLyricFinder.findInOwnStorage(
                         context, title, artist, duration, mediaId,
@@ -890,8 +899,6 @@ internal class LocalLyricProvider(
                 "duration=${song.duration}, active=${registered.player.isActive}, ok=$ok"
         )
     }
-
-    
 
     private fun publishPending(title: String, artist: String?, durationMs: Long, mediaId: String?) {
         val cached = pendingLyric ?: return
@@ -1001,7 +1008,6 @@ internal class LocalLyricProvider(
 
     companion object {
 
-        
         private const val SWITCH_GRACE_MS = 1_500L
 
         private const val BACKWARD_TOLERANCE_MS = 1_500L

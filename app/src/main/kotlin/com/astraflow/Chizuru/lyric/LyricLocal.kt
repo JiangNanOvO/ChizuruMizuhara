@@ -19,7 +19,7 @@ public class LocalLyric(
     val firstLine: String? = null
 )
 
-public enum class LyricFormat { KRC, QRC, LRC, NETEASE, LRCX }
+public enum class LyricFormat { KRC, QRC, LRC, NETEASE, LRCX, KUWO_DAT }
 
 public enum class BaseDir { EXTERNAL_FILES, EXTERNAL_CACHE, FILES, CACHE }
 
@@ -55,6 +55,7 @@ internal object LyricParsers {
         "content", "lyrics", "text", "tlyric"
     )
     private val META_LINE = Regex("""^\[([A-Za-z]+)\s*:\s*(.*?)]$""")
+    private val KRC_META = Regex("""^\[([A-Za-z_][A-Za-z0-9_]*)\s*:(.*)$""")
     private val KUWO_LINE = Regex("""^\[(\d{1,3}):(\d{2})(?:[.:](\d{1,3}))?\]""")
     private val KUWO_TAG = Regex("""<(-?\d+),(-?\d+)>""")
     private val LRC_TIME = Regex("""\[(\d{1,3}):(\d{1,2})(?:[.:](\d{1,3}))?]""")
@@ -102,6 +103,15 @@ internal object LyricParsers {
                 if (txt.isEmpty() || isPlaceholder(txt)) continue
                 if (firstLine == null) firstLine = txt
                 lines.add(parsed)
+                continue
+            }
+            val km = KRC_META.find(line)
+            if (km != null) {
+                val value = km.groupValues[2].trim().trimEnd(']').trim()
+                when (km.groupValues[1].lowercase()) {
+                    "ti" -> title = value.ifBlank { null }
+                    "ar" -> artist = value.ifBlank { null }
+                }
                 continue
             }
             val mm = META_LINE.find(line) ?: continue
@@ -194,6 +204,15 @@ internal object LyricParsers {
             }
             val times = LRC_TIME.findAll(line).toList()
             if (times.isEmpty()) {
+                val krcMeta = KRC_META.find(line)
+                if (krcMeta != null) {
+                    val value = krcMeta.groupValues[2].trim().trimEnd(']').trim()
+                    when (krcMeta.groupValues[1].lowercase()) {
+                        "ti" -> title = value.ifBlank { null }
+                        "ar" -> artist = value.ifBlank { null }
+                    }
+                    continue
+                }
                 val mm = META_LINE.find(line) ?: continue
                 when (mm.groupValues[1].lowercase()) {
                     "ti" -> title = mm.groupValues[2].trim().ifBlank { null }
@@ -218,13 +237,36 @@ internal object LyricParsers {
         return LocalLyric(build(items), title, artist, id, firstLine)
     }
 
+    private fun deepLyricString(obj: JSONObject, key: String, depth: Int = 0): String? {
+        if (depth > 3) return null
+        val v = obj.opt(key) ?: return null
+        return when (v) {
+            is String -> {
+                val text = v.trim()
+                if (text.isEmpty() || text == "null") null
+                else if (text.startsWith("{") && text.endsWith("}")) {
+                    runCatching { JSONObject(text) }.getOrNull()?.let { nested ->
+                        deepLyricString(nested, key, depth + 1)
+                            ?: deepLyricString(nested, "lyric", depth + 1)
+                    } ?: text
+                } else text
+            }
+            is JSONObject -> deepLyricString(v, "lyric", depth + 1)
+                ?: deepLyricString(v, "lrc", depth + 1)
+                ?: deepLyricString(v, "yrc", depth + 1)
+                ?: deepLyricString(v, "musicId", depth + 1)
+            is Number -> v.toString()
+            else -> null
+        }
+    }
+
     fun parseNetease(text: String): LocalLyric? {
         val obj = runCatching { JSONObject(text) }.getOrNull() ?: return null
-        val lrc = obj.optString("lrc").takeIf { it.isNotBlank() }
-        val yrc = obj.optString("yrc").takeIf { it.isNotBlank() }
+        val lrc = deepLyricString(obj, "lrc")
+        val yrc = deepLyricString(obj, "yrc")
         if (lrc == null && yrc == null) return null
 
-        val id = obj.optString("musicId").takeIf { it.isNotBlank() && it != "0" }
+        val id = deepLyricString(obj, "musicId")?.takeIf { it != "0" }
 
         val translation = HashMap<Long, String>()
         for (key in arrayOf(
@@ -234,7 +276,7 @@ internal object LyricParsers {
             "translation",
             "yrcTranslate"
         )) {
-            obj.optString(key).takeIf { it.isNotBlank() }?.let { raw ->
+            deepLyricString(obj, key)?.let { raw ->
                 for ((t, s) in parseNeteaseLines(raw)) translation[t] = s
             }
         }
@@ -247,7 +289,7 @@ internal object LyricParsers {
             "roma",
             "romaLyric"
         )) {
-            obj.optString(key).takeIf { it.isNotBlank() }?.let { raw ->
+            deepLyricString(obj, key)?.let { raw ->
                 for ((t, s) in parseNeteaseLines(raw)) roma[t] = s
             }
         }
@@ -394,8 +436,20 @@ internal object LyricParsers {
         return null
     }
 
+    fun parseKuwoDat(bytes: ByteArray): LocalLyric? {
+        val text = KuwoLyric.decodeDat(bytes) ?: return null
+        return parseKuwoLrcx(text)
+    }
+
     fun parseKuwoLrcx(content: String): LocalLyric? {
         if (!content.contains("[kuwo")) return null
+
+        val factors = Regex("""\[kuwo:(\d+)]""").find(content)
+            ?.groupValues?.get(1)?.toIntOrNull() ?: 0
+        var c = factors / 10
+        var d = factors % 10
+        if (c <= 0) c = 1
+        if (d <= 0) d = 1
         var title: String? = null
         var artist: String? = null
         val lines = ArrayList<RichLyricLine>()
@@ -420,13 +474,16 @@ internal object LyricParsers {
                 index = tag.range.last + 1
                 text.append(chunk)
                 if (!isMeaningful(chunk)) continue
-                val start = lineBegin + (tag.groupValues[2].toLongOrNull() ?: 0L).coerceAtLeast(0L)
-                val end = lineBegin + (tag.groupValues[1].toLongOrNull() ?: 0L).coerceAtLeast(0L)
+
+                val endAbs = tag.groupValues[1].toLongOrNull() ?: 0L
+                val durMinusEnd = tag.groupValues[2].toLongOrNull() ?: 0L
+                val begin = lineBegin + (endAbs + durMinusEnd) / (2L * c)
+                val end = begin + (endAbs - durMinusEnd) / (2L * d)
                 words.add(
                     LyricWord(
-                        begin = start,
-                        end = end.coerceAtLeast(start + 1),
-                        duration = (end - start).coerceAtLeast(1),
+                        begin = begin,
+                        end = end.coerceAtLeast(begin + 1),
+                        duration = (end - begin).coerceAtLeast(1),
                         text = chunk
                     )
                 )
@@ -446,12 +503,16 @@ internal object LyricParsers {
             line.end = end
             line.duration = end - line.begin
         }
-        return LocalLyric(sorted, null, null, null, title ?: artist ?: sorted.firstOrNull()?.text)
+        return LocalLyric(
+            lines = sorted,
+            title = title,
+            artist = artist,
+            id = null,
+            firstLine = title ?: artist ?: sorted.firstOrNull()?.text
+        )
     }
-
     private fun trimmedText(text: String): String = text.trim()
 
-    
     fun parseAnyBytes(bytes: ByteArray): LocalLyric? {
         parseKrc(bytes)?.let { if (isUsable(it.lines)) return it }
         val text = runCatching { bytes.toString(Charsets.UTF_8) }.getOrNull() ?: return null
@@ -459,7 +520,6 @@ internal object LyricParsers {
         return parseAnyPayload(text)
     }
 
-    
     private fun isMeaningful(text: String): Boolean = text.any { it.isLetterOrDigit() }
 
     fun isUsable(lines: List<RichLyricLine>): Boolean {
@@ -472,7 +532,6 @@ internal object LyricParsers {
         val t = text.trim()
         if (t.isEmpty()) return true
 
-        
         if (!t.any { it.isLetterOrDigit() }) return true
         if (t.startsWith("{") || t.startsWith("}") || t.startsWith("[") ||
             t.startsWith("]") || (t.startsWith("<") && t.endsWith(">"))
@@ -628,6 +687,11 @@ internal object LocalLyricFinder {
 
     private const val WRITE_GRACE_MS = 2_000L
 
+    private const val KUWO_DURATION_TOLERANCE_MS = 3_000L
+
+    private const val KUWO_WRITE_BEFORE_MS = 30_000L
+    private const val KUWO_WRITE_AFTER_MS = 120_000L
+
     private val HASH_SUFFIX = Regex("""-[0-9a-fA-F]{16,}$|-(\d{5,})$""")
 
     private const val MAX_SWEEP_DEPTH = 4
@@ -729,11 +793,20 @@ internal object LocalLyricFinder {
         var verifiedDiff = Long.MAX_VALUE
         var fresh: Pair<File, LocalLyric>? = null
         var freshDiff = Long.MAX_VALUE
+        val kuwoMode = recipe.sources.any { it.format == LyricFormat.KUWO_DAT }
+        val durationTolerance = if (kuwoMode) KUWO_DURATION_TOLERANCE_MS else DURATION_TOLERANCE_MS
         if (durationMs > 0L) {
             for ((file, lyric) in parsed) {
                 val last = lyric.lines.lastOrNull()?.begin ?: continue
                 val diff = abs(last - durationMs)
-                if (diff > DURATION_TOLERANCE_MS) continue
+                if (diff > durationTolerance) continue
+                if (kuwoMode) {
+                    val writtenAt = file.lastModified()
+                    if (startedAt > 0L &&
+                        (writtenAt < startedAt - KUWO_WRITE_BEFORE_MS ||
+                            writtenAt > startedAt + KUWO_WRITE_AFTER_MS)
+                    ) continue
+                }
                 if (identityConflicts(lyric, wantCore, wantArtist, mid)) {
                     log("排除 " + file.name + "：歌词自带身份与当前歌曲不符")
                     continue
@@ -748,12 +821,13 @@ internal object LocalLyricFinder {
                 // 文件名就是本曲 id（网易云的 LrcCache）：最硬的证据
                 val namedById = mid.isNotEmpty() &&
                     normalize(file.name.substringBeforeLast('.')) == mid
+                val idNamedOk = !idNamed || mid.isEmpty()
                 if (evidence == true) {
                     if (diff < verifiedDiff) {
                         verifiedDiff = diff
                         verified = file to lyric
                     }
-                } else if (namedById || (recentlyWritten && !idNamed)) {
+                } else if (namedById || (recentlyWritten && idNamedOk)) {
                     if (diff < freshDiff) {
                         freshDiff = diff
                         fresh = file to lyric
@@ -823,7 +897,17 @@ internal object LocalLyricFinder {
         var bestScore = Int.MIN_VALUE
         var best: LocalLyric? = null
         var scanned = 0
-        for (root in roots) {
+        val ordered = roots.sortedByDescending { root ->
+            var hit = 0
+            runCatching {
+                root.listFiles()?.forEach { child ->
+                    val n = child.name.lowercase()
+                    if (n.contains("lyric") || n.contains("lrc")) hit++
+                }
+            }
+            hit
+        }
+        for (root in ordered) {
             walkLyricFiles(root, 0) { file ->
                 if (scanned >= MAX_SWEEP_FILES) return@walkLyricFiles
                 val format = sweepFormatOf(file) ?: return@walkLyricFiles
@@ -852,7 +936,11 @@ internal object LocalLyricFinder {
     private fun walkLyricFiles(dir: File, depth: Int, visit: (File) -> Unit) {
         if (depth > MAX_SWEEP_DEPTH) return
         val children = runCatching { dir.listFiles() }.getOrNull() ?: return
-        for (child in children) {
+        val sorted = children.sortedBy { child ->
+            val n = child.name.lowercase()
+            if (child.isDirectory && (n.contains("lyric") || n.contains("lrc"))) 0 else 1
+        }
+        for (child in sorted) {
             if (child.isDirectory) walkLyricFiles(child, depth + 1, visit)
             else if (child.isFile) visit(child)
         }
@@ -866,6 +954,7 @@ internal object LocalLyricFinder {
             name.endsWith(".lrc") -> LyricFormat.LRC
             name.endsWith(".lrcx") -> LyricFormat.LRCX
             name.endsWith(".alm3ll") -> LyricFormat.LRC
+            name.endsWith(".dat") -> LyricFormat.KUWO_DAT
             else -> null
         }
     }
@@ -946,6 +1035,15 @@ internal object LocalLyricFinder {
 
         val age = now - file.lastModified()
         if (age <= RECENT_WINDOW_MS) score += 25 else if (age <= 900_000L) score += 8
+        if (file.name.endsWith(".dat", true)) {
+            if (age <= RECENT_WINDOW_MS) score += 40
+            if (durationMs > 0) {
+                val lastBegin = lyric.lines.lastOrNull()?.begin ?: 0L
+                if (lastBegin > 0 && abs(lastBegin - durationMs) <= KUWO_DURATION_TOLERANCE_MS) {
+                    score += 80
+                }
+            }
+        }
 
         if (durationMs > 0) {
             val diff = abs(lyric.lines.last().begin - durationMs)
@@ -964,6 +1062,7 @@ internal object LocalLyricFinder {
                 LyricFormat.QRC -> LyricParsers.parseQrcFile(file.readBytes())
                 LyricFormat.LRC -> LyricParsers.parseLrcText(file.readText())
                 LyricFormat.NETEASE -> LyricParsers.parseNetease(file.readText())
+                LyricFormat.KUWO_DAT -> LyricParsers.parseKuwoDat(file.readBytes())
                 LyricFormat.LRCX -> {
                     val text = file.readText()
                     LyricParsers.parseKuwoLrcx(text) ?: LyricParsers.parseLrcText(text)

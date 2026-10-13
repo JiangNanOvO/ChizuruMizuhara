@@ -20,6 +20,8 @@ object Constants {
         QQ_PACKAGE
     )
 
+    val AUDIO_OUTPUT_BOOST_PACKAGES: Set<String> = setOf(KUWO_PACKAGE, LUNA_PACKAGE)
+
     const val PREFS_NAME: String = "mitian_settings"
     const val KEY_ENABLED: String = "module_enabled"
     const val KEY_HIDE_ICON: String = "hide_launcher_icon"
@@ -56,20 +58,18 @@ object Constants {
             )
         ),
 
-        
-
-        
         LocalRecipe(
             packageName = KUWO_PACKAGE,
             displayName = "酷我音乐",
             sources = listOf(
-                LocalSource(BaseDir.FILES, "lyric", LyricFormat.KRC, listOf("krc", "lrc")),
-                LocalSource(BaseDir.FILES, "lyrics", LyricFormat.KRC, listOf("krc", "lrc")),
-                LocalSource(BaseDir.CACHE, "lyric", LyricFormat.KRC, listOf("krc", "lrc")),
-                LocalSource(BaseDir.CACHE, "lyrics", LyricFormat.KRC, listOf("krc", "lrc")),
-                LocalSource(BaseDir.FILES, "krc", LyricFormat.KRC, listOf("krc", "lrc")),
-                LocalSource(BaseDir.EXTERNAL_FILES, "kwmusic/lyric", LyricFormat.LRC, listOf("lrc", "krc")),
-                LocalSource(BaseDir.EXTERNAL_FILES, "kwmusic/krc", LyricFormat.KRC, listOf("krc", "lrc"))
+                LocalSource(
+                    BaseDir.EXTERNAL_FILES, "KuwoMusic/data/LYRICS_CACHE",
+                    LyricFormat.KUWO_DAT, listOf("dat")
+                ),
+                LocalSource(
+                    BaseDir.FILES, "KuwoMusic/data/LYRICS_CACHE",
+                    LyricFormat.KUWO_DAT, listOf("dat")
+                )
             )
         ),
         LocalRecipe(
@@ -90,7 +90,6 @@ object Constants {
             )
         ),
 
-        
         LocalRecipe(
             packageName = LUNA_PACKAGE,
             displayName = "汽水音乐",

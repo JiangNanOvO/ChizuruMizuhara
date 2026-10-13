@@ -44,14 +44,42 @@ aapt2 dump badging app-release.apk | grep uses-permission
 对 `app/src/main/kotlin` 全量扫描，以下调用**一个都没有**：
 
 - 发起网络请求：`HttpURLConnection` / `OkHttpClient` / `Socket` / `InetAddress` / `WebView.loadUrl`
-- 执行外部命令：`Runtime.getRuntime().exec` / `ProcessBuilder` / `su -c`
 - 动态加载代码：`DexClassLoader` / `PathClassLoader` / `InMemoryDexClassLoader`
 - 隐私相关：相机 / 麦克风 / 定位 / 短信 / 通讯录 / 设备号
 
+**会执行外部命令（root），但只有一处代码、且能不开**：`capability/root/RootShell` 用
+`ProcessBuilder("su", "-c", …)` 执行命令，全部命令如下，没有第二条路径：
+
+| 用在哪个功能 | 实际执行的命令 | 干什么 |
+| --- | --- | --- |
+| 独立歌词提供者 | `id`、`dumpsys media_session`、`cat '<歌词缓存文件>'`、`ls -t '<目录>'` | 判断有无 root、读当前播放状态、读播放器自己的歌词缓存 |
+| 音理音理适配 | `cp '<设置文件>' '<备份>'`、`base64 -d` 写入一个设置文件 | 改前备份、写入一个设置值 |
+
+两条都受开关控制：不打开这两个功能时，一行 `su` 都不会执行。命令都带超时，超时即销毁进程。
+
 代码里能看到的 `Class.forName(...)` 全部是 **Xposed 模块的正常形态** —— 用来定位
 *宿主应用*（播放器）的类，例如 `okhttp3.OkHttpClient`、`com.facebook.react.bridge.PromiseImpl`、
-`com.android.server.clipboard.ClipboardService`。这是"挂钩子"必须要做的事，
-挂上去只读、不改写、不拦截。
+`com.android.server.clipboard.ClipboardService`。这是"挂钩子"必须要做的事。
+
+**唯一的非只读适配：音频输出状态（仅酷我 / 汽水音乐）**
+
+`LocalLyricProvider.installAudioOutputBoost()` 在 `cn.kuwo.player`、`com.luna.music`
+两个进程内挂两个方法，让它们返回 `true`：
+
+| 类#方法 | 原行为 | 适配后 | 为什么 |
+| --- | --- | --- | --- |
+| `android.media.AudioManager#isBluetoothA2dpOn()` | 真实蓝牙 A2DP 状态 | `true`（歌词能力开启时） | 这两个播放器只在"检测到正在用无线音频输出"时才上报歌名 / 歌手 / 时长；否则 MediaSession 是空的，星河岛拿不到歌名，歌词胶囊对它们完全不可用 |
+| `android.bluetooth.BluetoothAdapter#isEnabled()` | 真实蓝牙开关状态 | 同上 | 同上 |
+
+它的边界：
+
+- **不连接、不开启、不搜索任何蓝牙设备**；应用也不申请任何蓝牙权限（`BLUETOOTH` / `BLUETOOTH_CONNECT` 都没有）；
+- 只改这两个**查询方法**的返回值，不写播放器数据、不改播放器设置、不改变播放行为；
+- 「歌词胶囊」关掉时立即走回原实现（`chain.proceed()`）；
+- 只在这两个包名的进程里生效，其它应用内不会挂这两个方法；
+- 想彻底不要它：在 LSPosed 里去勾这两个播放器的作用域即可。
+
+除上述之外，模块对播放器**只读**：挂的都是"读一眼返回值或参数"的钩子，不改写、不拦截。
 
 ## 四、依赖库审计
 

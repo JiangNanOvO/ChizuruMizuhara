@@ -10,6 +10,7 @@ import com.astraflow.Chizuru.capability.link.LinkHook
 import com.astraflow.Chizuru.capability.neriplayer.NeriPlayerHook
 import com.astraflow.Chizuru.lyric.Constants
 import com.astraflow.Chizuru.lyric.HookCrashLog
+import com.astraflow.Chizuru.lyric.KuwoLyricProvider
 import com.astraflow.Chizuru.lyric.LocalLyricProvider
 import com.astraflow.Chizuru.lyric.ModuleLogger
 import com.astraflow.Chizuru.lyric.MitianLyricProvider
@@ -79,6 +80,16 @@ class HookEntry : XposedModule() {
         try {
             if (packageName == Constants.PLAYER_PACKAGE_NAME) {
                 MitianLyricProvider(this, logger, param.classLoader).installHooks()
+                return
+            }
+            if (packageName == Constants.KUWO_PACKAGE) {
+                KuwoLyricProvider(
+                    module = this,
+                    logger = logger,
+                    classLoader = param.classLoader,
+                    hostPackage = packageName,
+                    processName = currentProcessName()
+                ).installHooks()
                 return
             }
             LocalLyricProvider(
