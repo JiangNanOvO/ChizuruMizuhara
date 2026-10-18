@@ -245,9 +245,7 @@ internal class LocalLyricProvider(
         val sniffedAt = SystemClock.elapsedRealtime()
         pendingLyric = Triple(lyric, source, sniffedAt)
         val signature = currentSignature ?: return
-        val trusted = trustedBySource || hasTrustworthyIdentity(lyric)
-
-        if (lyricFound && !trusted) return
+        var trusted = trustedBySource || hasTrustworthyIdentity(lyric)
         val parts = signature.split('|')
         val title = parts.getOrNull(0).orEmpty()
         if (title.isBlank()) return
@@ -255,7 +253,17 @@ internal class LocalLyricProvider(
         val duration = metadataDurationMs
         val mediaId = parts.getOrNull(2)?.takeIf { it.isNotBlank() && it != "null" }
             ?: currentMediaId
+        if (!trusted && hostPackage == "com.netease.cloudmusic" &&
+            mediaId != null && lyric.id != null &&
+            LocalLyricFinder.normalize(lyric.id) == LocalLyricFinder.normalize(mediaId)
+        ) trusted = true
+        if (lyricFound && !trusted) return
+        if (lyricFound && !(hostPackage == "com.netease.cloudmusic" && trusted)) return
         logger.info("[$source] 嗅到歌词：${lyric.lines.size} 行，标题=<${lyric.title ?: lyric.firstLine}>")
+        if (hostPackage == "com.netease.cloudmusic" && pendingSwitchAt != 0L && !trusted) {
+            logger.info("[netease] 待定期间丢弃无身份证明的歌词")
+            return
+        }
         val mustVerify = !trustedBySource ||
             hostPackage == "cn.kuwo.player" || hostPackage == "com.netease.cloudmusic"
         if (mustVerify && !belongsToCurrentSong(lyric, sniffedAt, title, artist, duration, mediaId)) {
@@ -265,7 +273,7 @@ internal class LocalLyricProvider(
         mainHandler.post {
             if (currentSignature != signature) return@post
 
-            if (lyricFound) return@post
+            if (lyricFound && !(hostPackage == "com.netease.cloudmusic" && trusted)) return@post
             everPublished = true
             publish(title, artist, duration, mediaId, lyric.lines, source, lyric.title)
         }
@@ -305,7 +313,9 @@ internal class LocalLyricProvider(
         val lastLine = lyric.lines.lastOrNull()?.begin ?: 0L
         if (durationMs > 0L && lastLine > 0L) {
             val diff = if (lastLine > durationMs) lastLine - durationMs else durationMs - lastLine
-            if (diff <= 8_000L) return true
+            if (diff <= 8_000L &&
+                (hostPackage != "com.netease.cloudmusic" || sniffedAt >= songSwitchAt)
+            ) return true
 
             val guess = lyric.firstLine?.trim().orEmpty()
             if (guess.isNotEmpty() && guess.length <= 24 && !guess.startsWith("[")) {
@@ -318,7 +328,8 @@ internal class LocalLyricProvider(
                 }
             }
         }
-        return sniffedAt >= songSwitchAt - SWITCH_GRACE_MS
+        val grace = if (hostPackage == "com.netease.cloudmusic") 0L else SWITCH_GRACE_MS
+        return sniffedAt >= songSwitchAt - grace
     }
 
     private fun hookMediaSession() {
@@ -408,7 +419,14 @@ internal class LocalLyricProvider(
         val artist = resolved.artist
 
         val idChanged = mediaId != null && currentMediaId != null && mediaId != currentMediaId
-        val sameSong = resolved.sameSong
+        val neteaseIdStable = hostPackage == "com.netease.cloudmusic" &&
+            mediaId != null && currentMediaId != null && mediaId == currentMediaId
+        val neteaseIdSwapped = hostPackage == "com.netease.cloudmusic" && idChanged
+        val sameSong = when {
+            neteaseIdStable -> true
+            neteaseIdSwapped -> false
+            else -> resolved.sameSong
+        }
         if (idChanged) {
             logger.info("mediaId 变化（$currentMediaId → $mediaId），仍按同一首处理：$title - $artist")
         }
@@ -464,6 +482,13 @@ internal class LocalLyricProvider(
         }
         pendingLyric = null
         pendingSwitchLyric = null
+        if (hostPackage == "com.netease.cloudmusic" && neteaseIdSwapped) {
+            logger.info("网易云 mediaId 已切，直接提交：$title - $artist")
+            pendingSwitchAt = songSwitchAt
+            commitSwitch(PendingSwitch(title, artist, duration, mediaId))
+            startProgressTicker()
+            return
+        }
         pendingSwitch = PendingSwitch(title, artist, duration, mediaId)
         pendingSwitchAt = songSwitchAt
         sawPositionSinceSwitch = false
