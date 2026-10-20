@@ -9,6 +9,8 @@ import android.os.Binder
 import android.os.Bundle
 import android.os.Process
 import android.util.Log
+import com.astraflow.Chizuru.capability.link.ClipIntent
+import com.astraflow.Chizuru.capability.link.ClipKind
 import com.astraflow.Chizuru.capability.link.LinkHub
 import com.astraflow.Chizuru.settings.ModuleEnabledState
 import com.astraflow.Chizuru.settings.ModulePrefs
@@ -33,7 +35,7 @@ class LinkInboxProvider : ContentProvider() {
         }
 
         return when (method) {
-            METHOD_DELIVER -> onDeliver(ctx.applicationContext, arg)
+            METHOD_DELIVER -> onDeliver(ctx.applicationContext, arg, extras)
             METHOD_HELLO -> onHello(ctx.applicationContext, extras)
             else -> Bundle.EMPTY
         }
@@ -47,8 +49,10 @@ class LinkInboxProvider : ContentProvider() {
         return Bundle.EMPTY
     }
 
-    private fun onDeliver(app: Context, url: String?): Bundle {
-        val link = url?.takeIf { it.isNotBlank() } ?: return Bundle.EMPTY
+    private fun onDeliver(app: Context, payload: String?, extras: Bundle?): Bundle {
+        val value = payload?.takeIf { it.isNotBlank() } ?: return Bundle.EMPTY
+        val kind = ClipKind.of(extras?.getString(EXTRA_CLIP_KIND))
+        val intent = ClipIntent(kind, value)
 
         
 
@@ -59,8 +63,8 @@ class LinkInboxProvider : ContentProvider() {
             Log.i(TAG, "链接助手已关闭，忽略投递")
             return Bundle.EMPTY
         }
-        Log.i(TAG, "收到一条链接投递")
-        val ok = LinkHub.postBlocking(app, link, AWAIT_MS)
+        Log.i(TAG, "收到一条剪贴板投递：" + kind.wire)
+        val ok = LinkHub.postBlocking(app, intent, AWAIT_MS)
         return Bundle().apply { putInt(RESULT_CODE, if (ok) 0 else -1) }
     }
 
@@ -81,6 +85,7 @@ class LinkInboxProvider : ContentProvider() {
         const val EXTRA_FRAMEWORK = "framework"
         const val EXTRA_MODULE_VERSION = "moduleVersion"
         const val RESULT_CODE = "resultCode"
+        const val EXTRA_CLIP_KIND = "clipKind"
         private const val TAG = "Mitian"
 
         private const val AWAIT_MS = 5_000L

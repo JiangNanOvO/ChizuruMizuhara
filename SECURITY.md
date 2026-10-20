@@ -108,7 +108,7 @@ aapt2 dump badging app-release.apk | grep uses-permission
   和谜天自己。否则任何第三方 App 都可以调用这个导出的 Provider，
   让谜天弹出一张**长得像官方**、实际指向钓鱼网站的卡片。
 - **不记录用户链接**：投递日志只写「收到一条链接投递」，不写 URL 本身。
-- 导出组件只有：启动器入口（`LauncherAlias`/`HomeActivity`）、
+- 导出组件只有：启动器入口（`LauncherAlias`/`ChizuruShellActivity`）、
   LSPosed 的「模块信息」页（`SettingsActivity`）、以及上面那个带调用方校验的 Provider。
 
 ## 七、你可以自己复核

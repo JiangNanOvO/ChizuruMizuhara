@@ -17,12 +17,23 @@ object ModulePrefs {
     const val KEY_KEEP_ALIVE = "link_keep_alive"
     const val KEY_LYRIC_STANDALONE = "lyric_standalone"
     const val KEY_NERI_ADAPT = "cap_neri_adapt"
+    const val KEY_CLIP_LINK = "clip_link"
+    const val KEY_CLIP_PHONE = "clip_phone"
+    const val KEY_CLIP_ADDRESS = "clip_address"
+    const val KEY_MAP_MODE = "map_mode"
+    const val KEY_MAP_PACKAGE = "map_package"
 
     const val BROWSER_SYSTEM = "system"
 
     const val BROWSER_PINNED = "pinned"
 
     const val BROWSER_ASK = "ask"
+
+    const val MAP_SYSTEM = "system"
+
+    const val MAP_PINNED = "pinned"
+
+    const val MAP_ASK = "ask"
 
     fun of(context: Context): SharedPreferences =
         context.getSharedPreferences(NAME, Context.MODE_PRIVATE)
@@ -42,6 +53,18 @@ object ModulePrefs {
     fun isStandaloneLyric(s: SharedPreferences): Boolean = s.getBoolean(KEY_LYRIC_STANDALONE, false)
 
     fun isNeriAdapt(s: SharedPreferences): Boolean = s.getBoolean(KEY_NERI_ADAPT, false)
+
+    fun isLinkClipEnabled(s: SharedPreferences): Boolean = s.getBoolean(KEY_CLIP_LINK, true)
+
+    fun isPhoneEnabled(s: SharedPreferences): Boolean = s.getBoolean(KEY_CLIP_PHONE, true)
+
+    fun isAddressEnabled(s: SharedPreferences): Boolean = s.getBoolean(KEY_CLIP_ADDRESS, true)
+
+    fun mapMode(s: SharedPreferences): String =
+        s.getString(KEY_MAP_MODE, MAP_SYSTEM) ?: MAP_SYSTEM
+
+    fun mapPackage(s: SharedPreferences): String =
+        s.getString(KEY_MAP_PACKAGE, "").orEmpty()
 
     fun browserMode(s: SharedPreferences): String =
         s.getString(KEY_BROWSER_MODE, BROWSER_SYSTEM) ?: BROWSER_SYSTEM

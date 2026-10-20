@@ -100,11 +100,18 @@ class ToggleSwitch(context: Context) : View(context) {
                 return true
             }
 
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+            MotionEvent.ACTION_UP -> {
                 val wasDragging = dragging
                 dragging = false
                 if (wasDragging && moved) commit(progress >= 0.5f) else commit(!checked)
                 performClick()
+                return true
+            }
+
+            MotionEvent.ACTION_CANCEL -> {
+                dragging = false
+                moved = false
+                animateTo(if (checked) 1f else 0f, animate = true)
                 return true
             }
         }

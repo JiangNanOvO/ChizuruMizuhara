@@ -45,7 +45,7 @@ object PickerSheet {
             },
         )
         card.addView(
-            ui.rowTitle(title).apply {
+            ui.text(title, 13f, R.color.text_sub).apply {
                 setPadding(
                     ui.dp(SectionTokens.HORIZONTAL_PADDING),
                     ui.dp(14),
@@ -107,7 +107,7 @@ object PickerSheet {
         popup.contentView = card
         popup.isOutsideTouchable = true
         popup.isFocusable = true
-        popup.setBackgroundDrawable(ColorDrawable(0x66000000))
+        popup.setBackgroundDrawable(ColorDrawable(0x00000000))
         popup.animationStyle = 0
 
         popup.showAtLocation(activity.window.decorView, Gravity.BOTTOM, 0, 0)

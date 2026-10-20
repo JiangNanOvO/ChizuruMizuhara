@@ -14,6 +14,8 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.Toast
 import com.astraflow.Chizuru.R
+import com.astraflow.Chizuru.keepalive.KeepAliveService
+import com.astraflow.Chizuru.settings.ModulePrefs
 import com.astraflow.Chizuru.ui.ios.SectionTokens
 import com.astraflow.Chizuru.ui.ios.Theme
 import com.astraflow.Chizuru.ui.widget.Motion
@@ -21,9 +23,9 @@ import com.astraflow.Chizuru.ui.widget.UIKit
 
 abstract class BaseActivity : Activity() {
 
-    protected lateinit var ui: UIKit
+    internal lateinit var ui: UIKit
 
-    protected val theme: Theme get() = Theme.of(this)
+    internal val theme: Theme get() = Theme.of(this)
 
     protected fun wrapPage(content: View, glow: Boolean = false): View {
         val root = FrameLayout(this)
@@ -39,25 +41,25 @@ abstract class BaseActivity : Activity() {
         return root
     }
 
-    protected fun scrollable(inner: LinearLayout): ScrollView =
+    internal fun scrollable(inner: LinearLayout): ScrollView =
         ScrollView(this).apply {
             isFillViewport = true
             setBackgroundColor(theme.colors.systemGroupedBackground)
             addView(inner)
         }
 
-    protected fun bindLargeTitle(scroll: ScrollView, title: View) {
+    internal fun bindLargeTitle(scroll: ScrollView, title: View) {
         Motion.bindLargeTitle(scroll, title)
     }
 
-    protected fun statusBarHeight(): Int {
+    internal fun statusBarHeight(): Int {
         val id = resources.getIdentifier("status_bar_height", "dimen", "android")
         return if (id > 0) resources.getDimensionPixelSize(id) else ui.dp(24)
     }
 
-    protected fun pagePadding(): Int = ui.dp(SectionTokens.PAGE_INSET)
+    internal fun pagePadding(): Int = ui.dp(SectionTokens.PAGE_INSET)
 
-    protected fun color(res: Int): Int = ui.color(res)
+    internal fun color(res: Int): Int = ui.color(res)
 
     override fun onResume() {
         super.onResume()
@@ -89,21 +91,78 @@ abstract class BaseActivity : Activity() {
         }
     }
 
-    protected fun topInset(): Int {
+    internal fun bottomInset(): Int {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return 0
+        val insets = window.decorView.rootWindowInsets ?: return 0
+        return insets.getInsets(WindowInsets.Type.navigationBars()).bottom
+    }
+
+    internal fun topInset(): Int {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return statusBarHeight()
         val insets = window.decorView.rootWindowInsets ?: return statusBarHeight()
         return insets.getInsets(WindowInsets.Type.statusBars()).top
     }
 
-    protected fun toast(message: String) {
+    internal fun toast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
-    protected fun openPage(cls: Class<*>) {
+    internal var pageReloader: (() -> Unit)? = null
+
+    private var reloadPending = false
+
+    internal fun reloadPage() {
+        if (reloadPending) return
+        reloadPending = true
+        window.decorView.postDelayed({
+            reloadPending = false
+            pageReloader?.invoke()
+        }, 240L)
+    }
+
+    internal fun pageRoot(topDp: Int = 20): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        setPadding(
+            ui.dp(SectionTokens.PAGE_INSET),
+            topInset() + ui.dp(topDp),
+            ui.dp(SectionTokens.PAGE_INSET),
+            ui.dp(96) + bottomInset(),
+        )
+    }
+
+    internal fun sheet(title: String, body: String) {
+        startActivity(
+            Intent(this, SheetActivity::class.java)
+                .putExtra(SheetActivity.EXTRA_TITLE, title)
+                .putExtra(SheetActivity.EXTRA_BODY, body),
+        )
+    }
+
+    internal fun syncKeepAlive() {
+        val prefs = ModulePrefs.of(this)
+        val want = ModulePrefs.isEnabled(prefs) && (
+            (ModulePrefs.isLyricEnabled(prefs) && ModulePrefs.isStandaloneLyric(prefs)) ||
+                (ModulePrefs.isLinkEnabled(prefs) && ModulePrefs.isKeepAlive(prefs))
+            )
+        if (want) KeepAliveService.start(this) else KeepAliveService.stop(this)
+    }
+
+    internal fun askNotifyPermission() {
+        if (Build.VERSION.SDK_INT < 33) return
+        val granted = checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+        if (!granted) {
+            runCatching {
+                requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 9001)
+            }
+        }
+    }
+
+    internal fun openPage(cls: Class<*>) {
         startActivity(Intent(this, cls))
     }
 
-    protected fun openLsposed() {
+    internal fun openLsposed() {
         val manager = "org.lsposed.manager"
         val launcher = packageManager.getLaunchIntentForPackage(manager)
         if (launcher != null) {
@@ -118,7 +177,7 @@ abstract class BaseActivity : Activity() {
             .onFailure { toast(getString(R.string.ui_need_lsposed)) }
     }
 
-    protected fun setLauncherIconHidden(hidden: Boolean) {
+    internal fun setLauncherIconHidden(hidden: Boolean) {
         val alias = ComponentName(this, "$packageName.ui.LauncherAlias")
         val state = if (hidden) {
             PackageManager.COMPONENT_ENABLED_STATE_DISABLED
@@ -130,6 +189,6 @@ abstract class BaseActivity : Activity() {
         }
     }
 
-    protected fun versionName(): String =
+    internal fun versionName(): String =
         runCatching { packageManager.getPackageInfo(packageName, 0).versionName }.getOrNull() ?: "?"
 }

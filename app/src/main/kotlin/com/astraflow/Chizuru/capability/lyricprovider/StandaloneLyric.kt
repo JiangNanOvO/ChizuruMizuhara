@@ -138,6 +138,8 @@ object StandaloneLyric {
 
     fun lastActive(): Boolean = System.currentTimeMillis() - lastActiveAt < 15_000L
 
+    fun providerCount(): Int = providers.size
+
     fun report(): String = lastReport
 
     private fun report(text: String) {

@@ -22,7 +22,7 @@ internal class LinkHook(
     private var sysContext: Context? = null
 
     @Volatile
-    private var lastUrl: String? = null
+    private var lastKey: String? = null
     @Volatile
     private var lastAt = 0L
 
@@ -68,14 +68,16 @@ internal class LinkHook(
             }.getOrNull() ?: return
             if (text.isBlank()) return
 
-            val url = LinkPatterns.firstLink(text) ?: return
+            val intent = ClipIntents.classify(text) ?: return
+            if (!kindAllowed(intent.kind)) return
 
+            val key = intent.kind.wire + "|" + intent.payload
             val now = android.os.SystemClock.elapsedRealtime()
-            if (url == lastUrl && now - lastAt < DEDUP_MS) return
-            lastUrl = url
+            if (key == lastKey && now - lastAt < DEDUP_MS) return
+            lastKey = key
             lastAt = now
 
-            worker.execute { push(service, url) }
+            worker.execute { push(service, intent) }
         } catch (_: Throwable) {
 
         }
@@ -87,7 +89,18 @@ internal class LinkHook(
             prefs.getBoolean(ModulePrefs.KEY_LINK, true)
     }.getOrDefault(true)
 
-    private fun push(service: Any?, url: String) {
+    private fun kindAllowed(kind: ClipKind): Boolean = runCatching {
+        val prefs = module.getRemotePreferences(ModulePrefs.NAME)
+        if (!prefs.getBoolean(ModulePrefs.KEY_ENABLED, true)) return@runCatching false
+        if (!prefs.getBoolean(ModulePrefs.KEY_LINK, true)) return@runCatching false
+        when (kind) {
+            ClipKind.LINK -> prefs.getBoolean(ModulePrefs.KEY_CLIP_LINK, true)
+            ClipKind.PHONE -> prefs.getBoolean(ModulePrefs.KEY_CLIP_PHONE, true)
+            ClipKind.ADDRESS -> prefs.getBoolean(ModulePrefs.KEY_CLIP_ADDRESS, true)
+        }
+    }.getOrDefault(false)
+
+    private fun push(service: Any?, intent: ClipIntent) {
         val ctx = sysContext ?: resolveContext(service).also { sysContext = it }
         if (ctx == null) {
             logW("拿不到系统 Context，本条丢弃")
@@ -97,10 +110,13 @@ internal class LinkHook(
             ctx.contentResolver.call(
                 android.net.Uri.parse("content://" + AUTHORITY),
                 METHOD_DELIVER,
-                url,
-                Bundle().apply { putString(EXTRA_KIND, KIND_CLIPBOARD) }
+                intent.payload,
+                Bundle().apply {
+                    putString(EXTRA_KIND, KIND_CLIPBOARD)
+                    putString(EXTRA_CLIP_KIND, intent.kind.wire)
+                }
             )
-            logI("链接已投递：${redactUrl(url)}")
+            logI("剪贴板意图已投递（${intent.kind.wire}）：${redactPayload(intent)}")
         }.onFailure { logE("投递失败", it) }
     }
 
@@ -124,6 +140,12 @@ internal class LinkHook(
         return null
     }
 
+    private fun redactPayload(intent: ClipIntent): String = when (intent.kind) {
+        ClipKind.LINK -> redactUrl(intent.payload)
+        ClipKind.PHONE -> intent.payload.take(3) + "****" + intent.payload.takeLast(2)
+        ClipKind.ADDRESS -> intent.payload.take(6) + "…"
+    }
+
     private fun logI(msg: String) = module.log(Log.INFO, TAG, msg)
     private fun logW(msg: String) = module.log(Log.WARN, TAG, msg)
     private fun logE(msg: String, t: Throwable? = null) {
@@ -137,6 +159,7 @@ internal class LinkHook(
         const val METHOD_DELIVER = "deliver"
         const val EXTRA_KIND = "kind"
         const val KIND_CLIPBOARD = "clipboard"
+        const val EXTRA_CLIP_KIND = "clipKind"
         const val DEDUP_MS = 1_000L
         const val TAG = "Mitian"
     }
