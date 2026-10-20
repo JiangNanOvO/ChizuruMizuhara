@@ -25,14 +25,6 @@ android {
     namespace = "com.astraflow.Chizuru"
     compileSdk = compileSdkVersion
 
-    // ui/glass 下放的是 Java 源码；AGP 默认只编译 src/main/java，
-    // 不把 src/main/kotlin 加进来就会找不到 GlassBottomBar 等类。
-    sourceSets {
-        getByName("main") {
-            java.srcDirs("src/main/java", "src/main/kotlin")
-        }
-    }
-
     defaultConfig {
         applicationId = "com.astraflow.Chizuru"
         minSdk = 27
@@ -88,6 +80,12 @@ android {
 
     buildFeatures {
         buildConfig = false
+    }
+
+    sourceSets {
+        getByName("main") {
+            java.srcDirs("src/main/java", "src/main/kotlin")
+        }
     }
 
     packaging {
