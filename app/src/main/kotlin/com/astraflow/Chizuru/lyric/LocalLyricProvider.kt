@@ -328,6 +328,12 @@ internal class LocalLyricProvider(
                 }
             }
         }
+        if (sniffedAt - songSwitchAt < 4_000L && durationMs > 0L && lastLine > 0L &&
+            kotlin.math.abs(lastLine - durationMs) > 25_000L
+        ) {
+            logger.info("丢弃刚切歌时对不上的歌词：末行=${lastLine} 当前时长=${durationMs}")
+            return false
+        }
         val grace = if (hostPackage == "com.netease.cloudmusic") 0L else SWITCH_GRACE_MS
         return sniffedAt >= songSwitchAt - grace
     }

@@ -101,7 +101,7 @@ class WatermarkView(context: Context) : View(context) {
     }
 
     private companion object {
-        const val LINE_ONE = "v1.5 谜天团队出品"
+        const val LINE_ONE = "v1.6 谜天出品 最后构建时间 2026-10-22 00:23"
         const val LINE_TWO = ""
         const val ALPHA = 0.05f
         const val TEXT_SIZE_SP = 11f

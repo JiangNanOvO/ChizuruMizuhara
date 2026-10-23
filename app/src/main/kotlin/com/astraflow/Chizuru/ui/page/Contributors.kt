@@ -21,8 +21,8 @@ internal val CONTRIBUTORS = listOf(
         "星穹",
         "galaxy.png",
         "https://github.com/2979208016/AstraGalaxy",
-        summary = "歌词能力雏形提供",
-        chips = listOf("作者:依依", "歌词能力起源"),
+        summary = "歌词能力/链接上岛雏形提供",
+        chips = listOf("作者:依依", "歌词能力起源", "链接上岛起源"),
     ),
     Contributor("开发人员", "p1.jpg", "", chips = listOf("开发"), action = "暂无链接"),
     Contributor("开发人员", "p2.jpg", "", chips = listOf("开发", "测试"), action = "暂无链接"),
@@ -49,6 +49,14 @@ internal val CONTRIBUTORS = listOf(
         summary = "作者之一",
         chips = listOf("作者", "设计", "开发"),
         action = "暂无链接",
+    ),
+    Contributor(
+        "Lil sakee",
+        "p7.jpg",
+        "",
+        summary = "用户反馈者先锋",
+        chips = listOf("用户", "反馈", "测试"),
+        action = "保护用户隐私无开放链接",
     ),
 )
 

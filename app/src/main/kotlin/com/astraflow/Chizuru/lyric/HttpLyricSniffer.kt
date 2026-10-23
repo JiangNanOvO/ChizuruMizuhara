@@ -52,6 +52,7 @@ internal class HttpLyricSniffer(
             hookMethod(bodyClass, "string")
             hookMethod(bodyClass, "bytes")
             hookStream(bodyClass)
+            hookCharStream(bodyClass)
         }
 
         for (name in listOf("okio.RealBufferedSource", "okio.Buffer")) {
@@ -61,6 +62,7 @@ internal class HttpLyricSniffer(
         for (name in listOf("okio.RealBufferedSource")) {
             val klass = runCatching { Class.forName(name, false, classLoader) }.getOrNull() ?: continue
             hookMethod(klass, "readUtf8")
+            hookStringResult(klass, "readString")
         }
         installUrlLogger()
         installResponseProbe()
@@ -185,6 +187,54 @@ internal class HttpLyricSniffer(
         }
     }
 
+    private fun hookCharStream(bodyClass: Class<*>) {
+        val method = runCatching { bodyClass.getDeclaredMethod("charStream") }.getOrNull()
+        if (method == null) {
+            logger.debug("ResponseBody#charStream 不存在，跳过")
+            return
+        }
+        try {
+            module.hook(method)
+                .setExceptionMode(XposedInterface.ExceptionMode.PROTECTIVE)
+                .intercept { chain ->
+                    if (!isActive()) return@intercept chain.proceed()
+                    val reader = chain.proceed() as? java.io.Reader
+                    if (reader == null) reader else LyricReaderTee(reader) { dispatchText(it) }
+                }
+            logger.info("网络歌词嗅探已挂载：okhttp3.ResponseBody#charStream")
+        } catch (throwable: Throwable) {
+            logger.error("挂载 charStream 钩子失败", throwable)
+        }
+    }
+
+    private fun dispatchText(text: String) {
+        if (text.length < 32) return
+        if (!looksLikeLyric(text)) return
+        submitString(text)
+    }
+
+    private fun hookStringResult(target: Class<*>, name: String) {
+        var hooked = 0
+        for (method in target.declaredMethods) {
+            if (method.name != name) continue
+            if (method.returnType != String::class.java) continue
+            try {
+                module.hook(method)
+                    .setExceptionMode(XposedInterface.ExceptionMode.PROTECTIVE)
+                    .intercept { chain ->
+                        if (!isActive()) return@intercept chain.proceed()
+                        val result = chain.proceed()
+                        runCatching { inspect(result) }
+                        result
+                    }
+                hooked++
+            } catch (throwable: Throwable) {
+                logger.debug("无法挂载 $name：" + throwable.message)
+            }
+        }
+        if (hooked > 0) logger.info("网络歌词嗅探已挂载：${target.name}#$name")
+    }
+
     private fun hookMethod(target: Class<*>, name: String) {
         val method = runCatching { target.getDeclaredMethod(name) }.getOrNull()
         if (method == null) {
@@ -301,7 +351,7 @@ internal class HttpLyricSniffer(
             val lyric = runCatching { LyricParsers.parseAnyPayload(text) }.getOrNull()
             if (lyric == null || !LyricParsers.isUsable(lyric.lines)) {
 
-                logger.info("疑似歌词但解析失败（${text.length} 字符，内容不记录）")
+                logger.info("疑似歌词但解析失败（" + text.length + " 字符）：" + preview(text))
                 return@execute
             }
             onLyric(lyric, "网络")
@@ -315,6 +365,15 @@ internal class HttpLyricSniffer(
             if (!LyricParsers.isUsable(lyric.lines)) return@execute
             onLyric(lyric, "网络")
         }
+    }
+
+    private fun preview(text: String): String {
+        val sb = StringBuilder(160)
+        for (c in text) {
+            if (sb.length >= 160) break
+            if (c.code in 32..126 || c.code > 127) sb.append(c)
+        }
+        return sb.toString()
     }
 
     private fun mark(payload: String): Boolean {

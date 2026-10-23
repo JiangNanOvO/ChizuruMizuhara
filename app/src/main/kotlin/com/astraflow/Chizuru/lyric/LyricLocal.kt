@@ -264,7 +264,15 @@ internal object LyricParsers {
         val obj = runCatching { JSONObject(text) }.getOrNull() ?: return null
         val lrc = deepLyricString(obj, "lrc")
         val yrc = deepLyricString(obj, "yrc")
-        if (lrc == null && yrc == null) return null
+        val klyric = if (lrc == null && yrc == null) deepLyricString(obj, "klyric") else null
+        val tlyricOnly =
+            if (lrc == null && yrc == null && klyric == null) deepLyricString(obj, "tlyric") else null
+        val romaOnly = if (lrc == null && yrc == null && klyric == null && tlyricOnly == null) {
+            deepLyricString(obj, "romalrc")
+        } else null
+        if (lrc == null && yrc == null && klyric == null && tlyricOnly == null && romaOnly == null) {
+            return null
+        }
 
         val id = deepLyricString(obj, "musicId")?.takeIf { it != "0" }
 
@@ -297,6 +305,9 @@ internal object LyricParsers {
         val base = yrc?.let { parseNeteaseYrc(it) }.orEmpty().ifEmpty {
             lrc?.let { parseNeteaseLines(it) }.orEmpty()
                 .map { (t, s) -> RichLyricLine(begin = t, end = t, text = s) }
+        }.ifEmpty {
+            (klyric ?: tlyricOnly ?: romaOnly)?.let { parseNeteaseLines(it) }.orEmpty()
+                .map { (t, s) -> RichLyricLine(begin = t, end = t, text = s) }
         }
         if (base.isEmpty()) return null
 
@@ -305,8 +316,8 @@ internal object LyricParsers {
             val end = (sorted.getOrNull(i + 1)?.begin ?: (line.begin + 3000L)).coerceAtLeast(line.begin)
             line.end = end
             line.duration = end - line.begin
-            line.translation = nearestLine(translation, line.begin)
-            line.roma = nearestLine(roma, line.begin)
+            line.translation = nearestLine(translation, line.begin, 1500L)
+            line.roma = nearestLine(roma, line.begin, 1500L)
             line
         }
         return LocalLyric(lines, null, null, id, lines.firstOrNull()?.text)
@@ -718,6 +729,7 @@ internal object LocalLyricFinder {
         val wantTitle = normalize(title)
         val wantCore = titleCore(title)
         val wantArtist = normalize(artist)
+        val wantId = normalize(mediaId)
         val now = System.currentTimeMillis()
 
         // 索引快速通道：之前扫过并记下的「歌曲 id / 歌名 / 歌手 → 文件」直接命中
@@ -742,6 +754,12 @@ internal object LocalLyricFinder {
             for (file in candidates) {
                 val lyric = parse(context, file, src.format) ?: continue
                 if (lyric.lines.isEmpty()) continue
+                if (src.format == LyricFormat.NETEASE && wantId.isNotEmpty() &&
+                    normalize(file.name) == wantId && lyric.lines.size >= 3
+                ) {
+                    log("id 命中: " + file.name)
+                    return lyric
+                }
                 if (newest == null || file.lastModified() > newest!!.first.lastModified()) {
                     newest = file to lyric
                 }
@@ -1048,6 +1066,9 @@ internal object LocalLyricFinder {
         if (durationMs > 0) {
             val diff = abs(lyric.lines.last().begin - durationMs)
             if (diff <= 5_000L) score += 25 else if (diff <= 15_000L) score += 12
+            val mid = normalize(mediaId)
+            val sameName = fileStem.isNotEmpty() && mid.isNotEmpty() && fileStem == mid
+            if (!sameName && diff > 20_000L) score -= 220
         }
         return score
     }
