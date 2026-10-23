@@ -2,7 +2,7 @@ package com.astraflow.Chizuru
 
 object Module {
 
-    const val PACKAGE_NAME: String = "com.astraflow.Chizuru"
+    const val PACKAGE_NAME: String = "com.astraflow.JiangNan.Chizuru"
 
     const val LYRICON_PROVIDER_PACKAGE: String = PACKAGE_NAME
 

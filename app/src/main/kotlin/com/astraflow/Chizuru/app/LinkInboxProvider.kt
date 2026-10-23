@@ -79,7 +79,7 @@ class LinkInboxProvider : ContentProvider() {
     override fun update(uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<out String>?): Int = 0
 
     companion object {
-        const val AUTHORITY = "com.astraflow.Chizuru.inbox"
+        const val AUTHORITY = "com.astraflow.JiangNan.Chizuru.inbox"
         const val METHOD_DELIVER = "deliver"
         const val METHOD_HELLO = "hello"
         const val EXTRA_FRAMEWORK = "framework"

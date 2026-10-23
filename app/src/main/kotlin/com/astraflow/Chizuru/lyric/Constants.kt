@@ -2,7 +2,7 @@ package com.astraflow.Chizuru.lyric
 
 object Constants {
 
-    const val PROVIDER_PACKAGE_NAME: String = "com.astraflow.Chizuru"
+    const val PROVIDER_PACKAGE_NAME: String = "com.astraflow.JiangNan.Chizuru"
 
     const val VERBOSE_BRIDGE: Boolean = false
 

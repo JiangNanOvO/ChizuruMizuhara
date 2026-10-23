@@ -26,7 +26,7 @@ android {
     compileSdk = compileSdkVersion
 
     defaultConfig {
-        applicationId = "com.astraflow.Chizuru"
+        applicationId = "com.astraflow.JiangNan.Chizuru"
         minSdk = 27
         targetSdk = 36
         versionCode = versionProps.getProperty("versionCode").trim().toInt()

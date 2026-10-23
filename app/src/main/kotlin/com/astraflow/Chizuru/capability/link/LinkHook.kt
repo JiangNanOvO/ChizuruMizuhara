@@ -155,7 +155,7 @@ internal class LinkHook(
 
     private companion object {
         const val CLIPBOARD_SERVICE = "com.android.server.clipboard.ClipboardService"
-        const val AUTHORITY = "com.astraflow.Chizuru.inbox"
+        const val AUTHORITY = "com.astraflow.JiangNan.Chizuru.inbox"
         const val METHOD_DELIVER = "deliver"
         const val EXTRA_KIND = "kind"
         const val KIND_CLIPBOARD = "clipboard"
