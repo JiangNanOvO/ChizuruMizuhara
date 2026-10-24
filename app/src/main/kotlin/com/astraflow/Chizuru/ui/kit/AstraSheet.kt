@@ -135,7 +135,7 @@ internal fun AstraSheetHost(content: @Composable () -> Unit) {
             while (isActive) {
                 withFrameNanos { }
                 val offsetReady = runCatching { sheetState.requireOffset() }.isSuccess
-                if (offsetReady && sheetState.anchorsReady) break
+                if (offsetReady) break
                 if (++waitedFrames > 120) break
             }
             // 竞态善后:若之前的中断已把 currentValue 改成 Expanded 而 offset 还在屏外
@@ -147,7 +147,7 @@ internal fun AstraSheetHost(content: @Composable () -> Unit) {
             }
             withProgrammaticSheetChange {
                 if (sheetState.currentValue != CupertinoSheetValue.Hidden && hostHeight > 0 && offsetNow >= hostHeight * 0.9f) {
-                    sheetState.snapToHidden()
+                    sheetState.hide()
                 }
                 sheetState.show()
             }

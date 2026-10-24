@@ -122,7 +122,6 @@ fun AstraAlert(
     val messageMaxHeight = (LocalConfiguration.current.screenHeightDp - 280).coerceAtLeast(80).dp
     AstraLiquidAlertDialog(
         visible = visible,
-        backdrop = astraGlassBackdrop(),
         onDismissRequest = { if (dismissible) latestDismiss() },
         title = { CupertinoText(title) },
         message = message?.let { text -> { CupertinoText(text) } },
@@ -200,6 +199,12 @@ fun AstraQuickActionsDialog(
     cancelText: String = "取消",
 ) {
     var pendingAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+    LaunchedEffect(visible) {
+        if (!visible) {
+            pendingAction?.invoke()
+            pendingAction = null
+        }
+    }
     val latestItems by rememberUpdatedState(items)
     val haptics = rememberAstraHaptics()
     CupertinoActionSheet(
@@ -208,12 +213,7 @@ fun AstraQuickActionsDialog(
         title = title?.let { text -> { CupertinoText(text) } },
         message = message?.let { text -> { CupertinoText(text) } },
         properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = true),
-        onGone = {
-            pendingAction?.invoke()
-            pendingAction = null
-        },
         // 和页面上其它浮层一样,面板取页面录下的画面做玻璃(不传就退化成不透明底色)。
-        backdrop = astraGlassBackdrop(),
         containerColor = CupertinoTheme.colorScheme.tertiarySystemBackground,
     ) {
         latestItems.forEach { item ->
