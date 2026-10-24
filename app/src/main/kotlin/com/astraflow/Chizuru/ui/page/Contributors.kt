@@ -1,67 +1,75 @@
 package com.astraflow.Chizuru.ui.page
 
-internal class Contributor(
+/**
+ * 贡献者一位:名字、头像文件（assets/avatars 下）、可选外链、简介与说明标签。
+ * 顺序沿用原来的排法：星流、星穹，随后是开发与测试，再是穆远星、江南、千愁与最早反馈的用户。
+ */
+class Contributor(
     val name: String,
     val avatar: String,
-    val link: String,
+    val link: String = "",
     val summary: String = "",
     val chips: List<String> = emptyList(),
-    val action: String = "",
 )
 
 internal val CONTRIBUTORS = listOf(
     Contributor(
-        "星流",
-        "xingliu.png",
-        "https://github.com/Xposed-Modules-Repo/com.astraflow.tool",
-        summary = "开发提供平台接入库",
-        chips = listOf("真神", "伟大的星河岛"),
+        name = "星流",
+        avatar = "xingliu.png",
+        link = "https://github.com/Xposed-Modules-Repo/com.astraflow.tool",
+        summary = "提供星河岛接入平台与接入库",
+        chips = listOf("星河岛", "接入库"),
     ),
     Contributor(
-        "星穹",
-        "galaxy.png",
-        "https://github.com/2979208016/AstraGalaxy",
-        summary = "歌词能力/链接上岛雏形提供",
-        chips = listOf("作者:依依", "歌词能力起源", "链接上岛起源"),
+        name = "星穹",
+        avatar = "galaxy.png",
+        link = "https://github.com/2979208016/AstraGalaxy",
+        summary = "歌词能力与链接上岛的雏形",
+        chips = listOf("作者：依依", "歌词能力", "链接上岛"),
     ),
-    Contributor("开发人员", "p1.jpg", "", chips = listOf("开发"), action = "暂无链接"),
-    Contributor("开发人员", "p2.jpg", "", chips = listOf("开发", "测试"), action = "暂无链接"),
     Contributor(
-        "穆远星",
-        "p3.jpg",
-        "https://www.coolapk.com/u/28719807",
-        action = "在酷安上查看",
+        name = "开发人员",
+        avatar = "p1.jpg",
+        summary = "参与插件开发",
+        chips = listOf("开发"),
+    ),
+    Contributor(
+        name = "开发人员",
+        avatar = "p2.jpg",
+        summary = "参与插件开发与测试",
+        chips = listOf("开发", "测试"),
+    ),
+    Contributor(
+        name = "穆远星",
+        avatar = "p3.jpg",
+        link = "https://www.coolapk.com/u/28719807",
         summary = "星流作者",
-        chips = listOf("星流创始人", "钻研"),
+        chips = listOf("星流", "星河岛"),
     ),
-    Contributor("开发人员", "p4.jpg", "", chips = listOf("测试", "反馈"), action = "暂无链接"),
     Contributor(
-        "江南",
-        "p5.jpg",
-        "https://github.com/JiangNanOvO/ChizuruMizuhara",
-        summary = "作者之一",
+        name = "开发人员",
+        avatar = "p4.jpg",
+        summary = "参与测试与问题反馈",
+        chips = listOf("测试", "反馈"),
+    ),
+    Contributor(
+        name = "江南",
+        avatar = "p5.jpg",
+        link = "https://github.com/JiangNanOvO/ChizuruMizuhara",
+        summary = "插件作者之一，负责维护",
         chips = listOf("作者", "维护"),
     ),
     Contributor(
-        "千愁",
-        "p6.png",
-        "",
-        summary = "作者之一",
+        name = "千愁",
+        avatar = "p6.png",
+        summary = "插件作者之一，负责设计与开发",
         chips = listOf("作者", "设计", "开发"),
-        action = "暂无链接",
     ),
     Contributor(
-        "Lil sakee",
-        "p7.jpg",
-        "",
-        summary = "用户反馈者先锋",
+        name = "Lil sakee",
+        avatar = "p7.jpg",
+        summary = "早期用户反馈与测试",
         chips = listOf("用户", "反馈", "测试"),
-        action = "保护用户隐私无开放链接",
     ),
 )
 
-internal const val CONTRIBUTOR_WEBSITE = "https://astraflow.cc/island/"
-
-internal const val CONTRIBUTOR_MAIL = "271400001@qq.com"
-
-internal const val CONTRIBUTOR_GITHUB = "https://github.com/JiangNanOvO/ChizuruMizuhara"

@@ -36,7 +36,7 @@
         android:theme="@style/Theme.Mitian">
 
         <activity
-            android:name=".ui.page.SettingsActivity"
+            android:name=".ui.page.AboutActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.Mitian">
@@ -66,13 +66,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-
-        <activity
-            android:name=".ui.page.SheetActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Mitian.Sheet"
-            android:excludeFromRecents="true"
-            android:noHistory="true" />
 
         <provider
             android:name=".app.LinkInboxProvider"
