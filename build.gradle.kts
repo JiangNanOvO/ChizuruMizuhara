@@ -1,17 +1,4 @@
-buildscript {
-    repositories {
-        maven("https://maven.aliyun.com/repository/google")
-        maven("https://maven.aliyun.com/repository/central")
-        mavenCentral()
-    }
-    dependencies {
-
-        classpath("com.android.tools.build:gradle:9.3.1")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.0")
-    }
+plugins {
+    id("com.android.application") version "9.4.1" apply false
+    id("org.jetbrains.kotlin.plugin.compose") version "2.4.21" apply false
 }
-
-extra["compileSdk"] = 37
-
-extra["compileSdkVersion"] = 37
-extra["targetSdkVersion"] = 36
