@@ -22,7 +22,15 @@ Chizuru代码是 MIT(见 LICENSE)
   （Copyright (c) 2026 2979208016，MIT License）
 - 链接上岛是照着星河岛的重写的
 
-## 4. 其它
+## 4. 界面部件（与星流 AstraFlow 同一套）
+
+- compose-hig `zone.ien.hig:hig:27.0.1-alpha05` 与图标库 `hig-icons-extended:27.0.1-alpha05`
+  （Apache-2.0，https://github.com/ienground/compose-hig）——页面的骨架、顶部栏、分组列表、开关、弹层与确认框
+- AndroidLiquidGlass `io.github.kyant0:backdrop:2.0.1`（Apache-2.0）——玻璃底栏与顶部栏的模糊
+- Capsule `zone.ien.capsule:capsule:2.1.4`、Shapes `io.github.kyant0:shapes:1.2.1`（Apache-2.0）——连续曲率圆角
+- 界面图标沿用星流自绘的图案（AstraFlow，Copyright 2026 MuYuanXing），仅在本插件的底栏与设置行里使用
+
+## 5. 其它
 
 - LSPosed / libxposed API：`io.github.libxposed:api:102.0.0`（Apache-2.0）
 - 星河岛是星流AstraFlow的产品Chizuru 是公开接口接进去的第三方插件
