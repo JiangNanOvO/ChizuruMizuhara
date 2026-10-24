@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- 界面文案写在 Compose 页面里(与星流页面同一套部件与写法);这里只留清单与通知要用的。 -->
+    <string name="app_name">Chizuru</string>
+    <string name="app_name_launcher">Chizuru</string>
+
+    <string name="xposed_description">Chizuru 为星流提供两项扩展功能：将正在播放的歌曲歌词送至星河岛，以及将剪贴板中的链接、电话号码与地址送至星河岛。若需识别剪贴板内容，请在 LSPosed 中勾选「系统框架」；若需提供歌词，请勾选对应的播放器。全部处理均在本机完成，不联网、不上传。</string>
+
+    <string name="lyricon_module_author">Chizuru</string>
+    <string name="lyricon_module_description">Chizuru 是星流的插件，提供歌词胶囊与链接助手两项功能。歌词按 LyricON 的「歌词提供者」协议交付，优先读取播放器本地缓存，无法读取时进行一次只读的网络旁路嗅探；链接助手仅识别剪贴板中可判定为链接、号码或地址的文本。全部处理均在本机完成，不联网、不上传。</string>
+
+    <string name="keepalive_channel">Chizuru 后台服务</string>
+    <string name="keepalive_channel_desc">保持链接助手随时可用（静默通知，不打扰）</string>
+    <string name="keepalive_notify_title">Chizuru 正在后台运行</string>
+    <string name="contributors">贡献者</string>
+    <string name="contributors_close">关闭</string>
+    <string name="contributors_hint">拖动浏览 · 双指缩放 · 点击头像查看详情</string>
+    <string name="contributors_no_link">还没填链接</string>
+    <string name="contributors_open_link">打开链接</string>
+    <string name="contributors_view_github">在 GitHub 上查看</string>
+    <string name="home_about">关于Chizuru</string>
+    <string name="home_settings">设置</string>
+    <string name="link_browser_pick">选择浏览器</string>
+    <string name="sec_about">关于</string>
+    <string name="sec_features">功能</string>
+    <string name="ui_about_body">Chizuru 是星流的插件，就干两件事：把正在放的歌的歌词送到星河岛，把复制到的链接送到星河岛。\n\n歌词走 LyricON 的「歌词提供者」协议，能读播放器自己缓存的词就不去碰网络，播放器的行为一点都不改。\n\n链接用星河岛官方接入库 astraisland-sdk 0.1.0，跳转目标做成待发意图交给星河岛，点卡片是岛自己开浏览器，我这进程死不死都无所谓。\n\n全程本机，不联网、不上传。\n\n装完记得在 LSPosed 里勾作用域，然后把目标应用重启一次。</string>
+    <string name="ui_btn_lsposed">启动 LSPosed</string>
+    <string name="ui_done">完成</string>
+    <string name="ui_empty_options">没有可选项</string>
+    <string name="ui_enable_off">模块已停用</string>
+    <string name="ui_enable_on">模块已启用，重启目标应用生效</string>
+    <string name="ui_free_body">Chizuru 免费开源，MIT。别商用，别二次售卖。</string>
+    <string name="ui_hide_off">已恢复桌面图标</string>
+    <string name="ui_hide_on">已隐藏桌面图标</string>
+    <string name="ui_msg_copied">没找到浏览器，项目地址已复制到剪贴板</string>
+    <string name="ui_need_lsposed">未检测到 LSPosed 管理器</string>
+    <string name="ui_sub_author">江南の千愁</string>
+    <string name="ui_switch_enable">启用模块</string>
+    <string name="ui_switch_hide">隐藏模块桌面图标</string>
+    <string name="ui_switch_hide_hint">隐藏后仍可从 LSPosed 进入本页</string>
+    <string name="ui_title_about">关于Chizuru</string>
+    <string name="ui_title_author">作者</string>
+    <string name="ui_title_free">免费公益</string>
+</resources>

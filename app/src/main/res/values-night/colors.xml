@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="bg">#FF000000</color>
+    <color name="bg_glow">#FF000000</color>
+    <color name="glass">#FF1C1C1E</color>
+    <color name="glass_strong">#FF2C2C2E</color>
+    <color name="glass_border">#7F545458</color>
+    <color name="glass_inner">#52787880</color>
+
+    <color name="text">#FFFFFFFF</color>
+    <color name="text_sub">#99EBEBF5</color>
+    <color name="text_hint">#4CEBEBF5</color>
+
+    <color name="accent">#FF0091FF</color>
+    <color name="accent_soft">#2D747480</color>
+    <color name="accent_glow">#2D747480</color>
+
+    <color name="ok">#FF30D158</color>
+    <color name="warn">#FFFF9230</color>
+    <color name="purple">#FFBF5AF2</color>
+    <color name="off">#4CEBEBF5</color>
+
+    <color name="icon">#FFEBEBF5</color>
+    <color name="divider">#7F545458</color>
+</resources>
