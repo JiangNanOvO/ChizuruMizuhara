@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       compileSdk:
-        description: 'compileSdk（默认 36；公开 SDK 最高就是 android-36）'
+        description: 'compileSdk（默认 37；界面库 compose-hig 要求 37）'
         required: false
-        default: '36'
+        default: '37'
 
 jobs:
   build:
@@ -44,7 +44,7 @@ jobs:
       - name: Build release APK
         run: |
           ./gradlew :app:assembleRelease --no-daemon --stacktrace \
-            -Pmysticsky.compileSdk=${{ github.event.inputs.compileSdk || '36' }}
+            -Pmysticsky.compileSdk=${{ github.event.inputs.compileSdk || '37' }}
 
       - name: Show APK
         run: ls -lh app/build/outputs/apk/release/
