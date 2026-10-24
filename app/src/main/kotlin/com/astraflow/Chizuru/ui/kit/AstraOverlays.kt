@@ -136,6 +136,7 @@ fun AstraAlert(
             }
         },
         properties = DialogProperties(dismissOnBackPress = dismissible, dismissOnClickOutside = dismissible),
+        backdrop = astraGlassBackdrop(),
         buttonsOrientation = if (secondaryText != null) Orientation.Vertical else Orientation.Horizontal,
         contentFullBleed = contentFullBleed,
     ) {
